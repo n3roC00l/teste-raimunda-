@@ -68,6 +68,12 @@ class StatusAnalise:
 
 ## Camada 1 — layout novo
 
+### Mock (Tkinter, tema escuro)
+
+![](screenshots/mock-painel-v1.png)
+
+> Mock estático só do layout — dados de exemplo. Gerado com `Xvfb` a partir de `mock_v1.py`.
+
 ### Wireframe
 
 ```
