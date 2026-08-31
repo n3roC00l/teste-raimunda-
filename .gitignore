@@ -1,0 +1,44 @@
+# --- Ambiente ---
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- YOLOv5 (clonar à parte — ver README) ---
+yolov5/
+
+# --- Pesos do modelo (obter do backup do Drive) ---
+*.pt
+*.pth
+*.onnx
+
+# --- Dados gerados em runtime ---
+imagens_para_analisar/
+imagens_analisadas/
+imagens_com_erro/
+imagens_analisadas-*/
+fotos_teste/
+logs_analise/*.csv
+logs_analise/*.json
+labels_yolo/
+
+# --- Datasets de treino ---
+soybean_dataset_final/
+soy-segmentation-ds/
+Modelo/
+*.zip
+
+# --- Credenciais ---
+rclone.conf
+*.conf
+.env
+*.key
+*.token
+
+# --- SO / editores ---
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

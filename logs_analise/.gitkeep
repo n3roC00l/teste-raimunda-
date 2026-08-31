@@ -1,0 +1,2 @@
+# Este diretório é criado em runtime pelo analisador.
+# O CSV e o JSON ficam fora do versionamento (.gitignore).
