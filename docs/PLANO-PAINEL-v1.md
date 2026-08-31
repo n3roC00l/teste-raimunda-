@@ -129,13 +129,22 @@ class StatusAnalise:
 - Atalhos: **F5** iniciar/parar · **F9** sincronizar · **Ctrl+Q** sair. (a tecla de "próxima parcela" fica **reservada** para o RV-02).
 - `:focus` visível (retângulo) para navegação por Tab.
 
-### Estilo (`ui/tema.py`)
+### Sistema visual (`ui/tema.py`)
 
-- **Tema escuro** — menos reflexo no sol do campo. Fundo `#1e1e1e`, texto claro.
-- Semântica de cor: **verde** = ok/rodando · **âmbar** = atenção · **vermelho** = erro/parado.
-- Acento roxo `#a68cf5` (mesma paleta do vault Obsidian, opcional).
-- `ttk.Style` sobre o tema `clam`. Números grandes 48–56 pt.
-- Janela **redimensionável** com tamanho mínimo (~760×560).
+Ver o mock em `docs/screenshots/mock-painel-v1.png`.
+
+| Token | Valor | Uso |
+|---|---|---|
+| `BG` / `BG2` / `LINE` | `#1a1a1a` / `#212121` / `#2e2e2e` | fundo · cartão · hairline |
+| `T1` / `T2` / `T3` | `#e7e7e7` / `#9a9a9a` / `#626262` | texto primário · secundário · labels |
+| `ACC` | `#a68cf5` | **só** o identificador da parcela e links |
+| `OK` / `WARN` / `STOP` | `#57c08a` / `#d9a441` / `#d96a5b` | **só** dots e valores de status |
+
+- **Escala de espaço:** 8 / 12 / 20. **Tipo:** display 58 pt · label de seção 8 pt caps · valor 10–13 pt · identificador mono 22 pt.
+- Pares **chave → valor** sempre alinhados (coluna de rótulo com largura fixa).
+- Cartões com hairline de 1 px, sem sombra.
+- Janela redimensionável, mínimo ~820×580.
+- Layout em **faixas**: identidade da amostra (Experimento / Parcela) → 2 cartões (Contagem \| Progresso da parcela) → Estado do sistema → ações.
 
 ## Bugs de dados corrigidos na v1
 
