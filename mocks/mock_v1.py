@@ -18,8 +18,8 @@ ACCENT  = "#a68cf5"
 
 root = tk.Tk()
 root.title("Estação de Captura — Rover FAPA")
-root.geometry("840x596")
-root.minsize(760, 560)
+root.geometry("860x650")
+root.minsize(780, 600)
 root.configure(bg=BG)
 
 F  = lambda s,w="normal": font.Font(family="DejaVu Sans", size=s, weight=w)
@@ -44,8 +44,14 @@ def dot(parent, cor, texto, fnt=None):
 # ===== cabeçalho =====
 hdr = tk.Frame(root, bg=BG)
 hdr.pack(fill="x", padx=16, pady=(14, 8))
-tk.Label(hdr, text="Estação de Captura — Rover FAPA", bg=BG, fg=TXT,
+tk.Label(hdr, text="Estação de Captura —", bg=BG, fg=TXT,
          font=F(13, "bold")).pack(side="left")
+exp = tk.Entry(hdr, width=24, font=F(12, "bold"), relief="solid", bd=0,
+               bg="#1a1a1a", fg=ACCENT, insertbackground=TXT,
+               highlightbackground=CARD_BD, highlightthickness=1)
+exp.insert(0, "Antecipado Pinhão 2025")
+exp.pack(side="left", padx=8, ipady=3)
+tk.Label(hdr, text="✎ nome do experimento", bg=BG, fg=FAINT, font=F(8)).pack(side="left")
 tk.Label(hdr, text="v2.1", bg=BG, fg=FAINT, font=FM(10)).pack(side="right")
 
 # ===== linha 1: CONTAGEM | EXPERIMENTO =====
@@ -71,23 +77,40 @@ tk.Label(row, text="15", bg=CARD, fg=GREEN, font=F(10, "bold")).pack(side="left"
 tk.Label(row, text=" (corr.)", bg=CARD, fg=MUT, font=F(9)).pack(side="left")
 dot(c, AMBER, "fila: 3 imagens a analisar").pack(anchor="w", pady=(8, 0))
 
-# -- Experimento --
-e_out, e = card(row1, "EXPERIMENTO")
+# -- Experimento / Parcela --
+e_out, e = card(row1, "PARCELA")
 e_out.grid(row=0, column=1, sticky="nsew", padx=(8, 0), pady=4)
-grid = tk.Frame(e, bg=CARD); grid.pack(anchor="w", pady=(6, 0))
-def campo(r, rot, val):
-    tk.Label(grid, text=rot, bg=CARD, fg=TXT, font=F(11)).grid(row=r, column=0, sticky="w", pady=6, padx=(0, 10))
-    ent = tk.Entry(grid, width=16, font=F(12), relief="solid", bd=0,
+
+xy = tk.Frame(e, bg=CARD); xy.pack(anchor="w", pady=(6, 0))
+def numfield(parent, rot, val):
+    tk.Label(parent, text=rot, bg=CARD, fg=MUT, font=F(11)).pack(side="left", padx=(0, 4))
+    ent = tk.Entry(parent, width=4, font=F(14, "bold"), justify="center", relief="solid", bd=0,
                    bg="#1a1a1a", fg=TXT, insertbackground=TXT,
                    highlightbackground=CARD_BD, highlightthickness=1)
-    ent.insert(0, val); ent.grid(row=r, column=1, sticky="w", pady=6, ipady=3)
-campo(0, "Tratamento", "03")
-campo(1, "Linha", "02")
+    ent.insert(0, val); ent.pack(side="left", padx=(0, 16), ipady=3)
+numfield(xy, "X", "3")
+numfield(xy, "Y", "7")
+
+lin = tk.Frame(e, bg=CARD); lin.pack(anchor="w", pady=(10, 0))
+tk.Label(lin, text="Linha", bg=CARD, fg=MUT, font=F(11)).pack(side="left", padx=(0, 8))
+for n in (1, 2, 3):
+    on = (n == 2)
+    tk.Label(lin, text=f" {n} ", font=F(12, "bold"),
+             bg=(ACCENT if on else "#1a1a1a"), fg=("white" if on else MUT),
+             padx=6, pady=3, relief="solid", bd=0,
+             highlightbackground=CARD_BD, highlightthickness=1).pack(side="left", padx=2)
+
 tk.Frame(e, bg=CARD_BD, height=1).pack(fill="x", pady=12)
 tk.Label(e, text="setor gerado", bg=CARD, fg=MUT, font=F(9)).pack(anchor="w")
-tk.Label(e, text="trat_03_linha_02", bg=CARD, fg=ACCENT, font=FM(12, "bold")).pack(anchor="w", pady=(2, 0))
-tk.Label(e, text="↳ aqui entra o controle de Parcela (RV-02) — Camada 2",
-         bg=CARD, fg=FAINT, font=F(8)).pack(anchor="w", pady=(10, 0))
+tk.Label(e, text="X3Y7L2", bg=CARD, fg=ACCENT, font=FM(16, "bold")).pack(anchor="w", pady=(2, 0))
+tk.Label(e, text="plot 47 de 216   ·   Antecipado Pinhão 2025", bg=CARD, fg=MUT, font=F(9)).pack(anchor="w", pady=(2, 8))
+nav = tk.Frame(e, bg=CARD); nav.pack(anchor="w")
+tk.Button(nav, text="◂", bg="#333333", fg=TXT, font=F(12, "bold"), bd=0, relief="flat",
+          width=3, cursor="hand2").pack(side="left", padx=(0, 6))
+tk.Button(nav, text="Próxima  ▸   (F2)", bg="#3a3a3a", fg=TXT, font=F(11, "bold"), bd=0,
+          relief="flat", cursor="hand2", padx=10, pady=4).pack(side="left")
+tk.Label(e, text="↳ RV-02 — carrega a planilha da semeadora e anda linha 1→2→3 → próximo plot",
+         bg=CARD, fg=FAINT, font=F(8)).pack(anchor="w", pady=(8, 0))
 
 # ===== linha 2: ESTADO DO SISTEMA =====
 s_out, s = card(root, "ESTADO DO SISTEMA")

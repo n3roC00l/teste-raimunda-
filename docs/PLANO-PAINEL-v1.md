@@ -78,16 +78,16 @@ class StatusAnalise:
 
 ```
 ┌───────────────────────────────────────────────────┐
-│  Estação de Captura — Rover FAPA             v2.1  │
+│  Estação de Captura — [ Antecipado Pinhão 2025 ] ✎ │  ← nome do experimento editável
 ├─────────────────────────┬─────────────────────────┤
 │  CONTAGEM               │  EXPERIMENTO            │
-│                         │  Tratamento  [ 03    ]  │
-│        128              │  Linha       [ 02    ]  │
+│                         │  X [ 3 ]  Y [ 7 ]       │
+│        128              │  Linha  ( 1 )(•2•)( 3 ) │
 │      corrigido          │                         │
 │   bruto: 137            │  setor gerado:          │
-│   parcela: 12 · 15      │  trat_03_linha_02       │
-│   fila: 3 a analisar ⚠  │  (aqui entra o bloco    │
-│                         │   Parcela na Camada 2)  │
+│   parcela: 12 · 15      │  X3Y7L2                 │
+│   fila: 3 a analisar ⚠  │  plot 47 de 216         │
+│                         │  [ ◂ ] [ Próxima ▸ (F2) ]│  ← Camada 2 (RV-02)
 ├─────────────────────────┴─────────────────────────┤
 │  ESTADO DO SISTEMA                                 │
 │  Analisador ● Pronto        Câmera ● OK            │
@@ -108,10 +108,12 @@ class StatusAnalise:
    - `parcela: <bruto> · <corrigido>` — **TOTAL funcionando** (vem pronto do status.json).
    - `fila: N a analisar` — `len(imagens_para_analisar/)`. Se N alto → cor âmbar.
 
-2. **Experimento** (era "Configurações do Experimento")
-   - Mantém os campos **Tratamento** e **Linha** (por enquanto — o bloco Parcela do RV-02 é Camada 2).
-   - Mostra o **`setor` gerado** ao vivo (`trat_{t}_linha_{l}`) — o operador vê o que vai ser gravado.
-   - Espaço reservado no layout para o controle de parcela futuro.
+2. **Experimento** (era "Configurações do Experimento") — **redefinido pelo feedback do Leandro (planilha da semeadora, 2026-08-31):**
+   - **Nome do experimento** — campo **editável** (pedido explícito do Leandro: o título "Estação de Captura Rover FAPA" deve virar um campo personalizável, exportado como nome do experimento). Ex.: `Antecipado Pinhão 2025`.
+   - **X** (largura, 1…12) · **Y** (comprimento, 1…18) · **Linha** (1 / 2 / 3).
+   - Mostra o **`setor` gerado** ao vivo: `X3Y7L2`.
+   - Base do RV-02 (Camada 2): botão "Próxima" que anda linha 1→2→3 e depois o próximo plot, seguindo a ordem da planilha `Plan1` carregada. Ver `docs/exemplos/` e a nota [[Planilha da semeadora]] do vault.
+   - **Aberto com o Leandro**: formato exato (`X3Y7L2` vs `X3Y7-L2` vs zero à esquerda), ordem das linhas, se carrega a planilha.
 
 3. **Estado do sistema** (era "Telemetria Raspberry Pi")
    - **Estado real do analisador**: `Carregando modelo… → Pronto → Analisando → Erro` (hoje só "Parado").
@@ -146,9 +148,10 @@ class StatusAnalise:
 | 5 | Telemetria corta texto | layout do bloco Estado do Sistema refeito |
 | 6 | Versão errada no título ("v2.5") | `config.VERSAO` |
 
-**CSV**: a v1 padroniza o cabeçalho no formato que o código já escreve
-(`timestamp_analise, setor_imagem, timestamp_imagem, plantulas_detectadas_ia, plantulas_ajustadas, nome_imagem`).
-A migração/limpeza do histórico antigo (11 padrões, 97 linhas vazias) é **RV-06**, não entra aqui.
+**CSV**: com a planilha do Leandro, o cabeçalho canônico passa a separar os campos do plot
+(`experimento, X, Y, linha, timestamp_analise, timestamp_imagem, plantulas_bruto, plantulas_corrigido, nome_imagem`)
+— assim o **export** pivota direto para as colunas `linha 1 / linha 2 / linha 3` da planilha.
+O histórico antigo (11 padrões, 97 linhas vazias) era teste → provável **descartar** e começar limpo. Detalhes em [[Planilha da semeadora]] / RV-06.
 
 ## Fora de escopo da v1 (Camada 2+)
 
