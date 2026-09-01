@@ -88,8 +88,9 @@ Ref.: *The Twelve-Factor App* (fator III); Parnas (1972). Ver
 1. **"TOTAL ACUMULADO" fica sempre em 0.** O `analisador_em_background.py` grava
    `status_analise.json` com a chave `ultima_imagem_analisada`; o `painel_controle.py`
    procura `imagem_atual` / `total_plantulas_linha`. Nunca casa.
+   → resolvido em `refactor/status-schema` (`core/status.py`).
 2. **O painel mostra a contagem bruta**, não a `plantulas_estimadas_reais` (corrigida
-   por precisão 0,934 / recall 0,921).
+   por precisão 0,934 / recall 0,921). → resolvido em `refactor/status-schema`.
 3. **Colunas do CSV divergem entre versões** — o código escreve
    `plantulas_detectadas_ia` / `plantulas_ajustadas`; o CSV de campo tem
    `plantulas_corrigidas` / `plantulas_detectadas`.

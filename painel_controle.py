@@ -3,11 +3,11 @@ from tkinter import messagebox, font
 import subprocess
 import os
 import threading
-import json
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import config
+from core import status as status_mod
 
 class App:
     def __init__(self, root):
@@ -20,10 +20,12 @@ class App:
         self.analyzer_process = None
         self.is_running = False
         self.photo_count = 0
-        
-        self.total_plantulas = 0
-        self.ultima_foto_processada = ""
-        
+
+        # Parcela sendo capturada agora. O TOTAL só é exibido quando o status
+        # gravado pelo analisador é desta mesma parcela (evita mostrar total
+        # antigo de uma parcela anterior).
+        self.setor_atual = ""
+
         self.status_file = config.ARQUIVO_STATUS
 
         title_font = font.Font(family="Helvetica", size=12, weight="bold")
@@ -115,31 +117,21 @@ class App:
             self.lbl_temp.config(text="Erro")
             self.lbl_gpu.config(text="Erro")
 
+        # O analisador é a fonte da verdade — o painel só lê e exibe.
         try:
-            if os.path.exists(self.status_file):
-                with open(self.status_file, 'r') as f:
-                    status_data = json.load(f)
-                    
-                    contagem_atual = status_data.get("plantulas_detectadas_ia", "--")
-                    self.lbl_plant_count.config(text=str(contagem_atual))
-                    
-                    if "total_plantulas_linha" in status_data:
-                        self.total_plantulas = status_data["total_plantulas_linha"]
-                    else:
-                        foto_atual = status_data.get("imagem_atual", "")
-                        if foto_atual and foto_atual != self.ultima_foto_processada:
-                            self.ultima_foto_processada = foto_atual
-                            try:
-                                self.total_plantulas += int(contagem_atual)
-                            except ValueError:
-                                pass
-                                
-                    self.lbl_total_count.config(text=str(self.total_plantulas))
+            st = status_mod.ler(self.status_file)
+            if st is not None:
+                # "Plântulas na Última Foto" = contagem corrigida (não a bruta).
+                self.lbl_plant_count.config(text=str(st.plantulas_corrigido))
 
-        except (json.JSONDecodeError, FileNotFoundError):
-             pass 
+                # TOTAL ACUMULADO: vem pronto do analisador. Só exibe se for
+                # da parcela corrente; senão mantém o "0" do início da captura.
+                if st.parcela and st.parcela == self.setor_atual:
+                    self.lbl_total_count.config(text=str(st.total_parcela_corrigido))
+                elif not self.is_running:
+                    self.lbl_total_count.config(text=str(st.total_parcela_corrigido))
         except Exception:
-             self.lbl_plant_count.config(text="Err")
+            self.lbl_plant_count.config(text="Err")
 
         self.root.after(2000, self.update_dashboard)
 
@@ -158,12 +150,11 @@ class App:
             return
             
         setor_nome = f"trat_{tratamento}_linha_{linha}".replace(" ", "_")
-        
+
         self.is_running = True
         self.photo_count = 0
-        self.total_plantulas = 0 
-        self.ultima_foto_processada = ""
-        
+        self.setor_atual = setor_nome
+
         self.update_gui_state()
         self.lbl_current_operacao.config(text=setor_nome, fg="#4CAF50")
         self.lbl_photo_count.config(text="0")
