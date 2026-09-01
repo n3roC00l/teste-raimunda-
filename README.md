@@ -58,11 +58,30 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # 5. rclone para o backup na nuvem
-rclone config          # criar um remote chamado "gdrive"
+rclone config          # criar o remote (padrão: "gdrive" — ver config.py)
 
 # 6. rodar
 ./iniciar_aplicacao.sh
 ```
+
+## Configuração (`config.py`)
+
+Todos os caminhos, parâmetros do modelo e o destino da nuvem ficam em
+[`config.py`](config.py) — ponto único de verdade. Os scripts não têm mais
+caminho absoluto nem constante espalhada.
+
+- **Padrão:** tudo é derivado de `BASE_DIR` (a pasta do repositório). Clonou e
+  rodou, funciona.
+- **Ajuste por máquina:** variáveis de ambiente `ROVER_*` (ex.: `ROVER_BASE_DIR`,
+  `ROVER_RCLONE_REMOTE`, `ROVER_MODELO_PATH`, `ROVER_INTERVALO_CAPTURA_S`) **ou**
+  copie `config_local.example.py` → `config_local.py` (ignorado pelo git) e
+  sobrescreva só o que mudar.
+- **Segredos** (`rclone.conf`) ficam no sistema, **nunca** em `config.py`.
+
+Smoke test: `python -m pytest tests/ -q`
+
+Ref.: *The Twelve-Factor App* (fator III); Parnas (1972). Ver
+[`docs/MELHORIAS.md`](docs/MELHORIAS.md) frente #1.
 
 ## Bugs conhecidos (não corrigidos neste marco zero)
 
@@ -78,7 +97,7 @@ rclone config          # criar um remote chamado "gdrive"
    `setor_imagem` + 97 linhas vazias. O código gera `trat_{Tratamento}_linha_{Linha}`,
    mas os dados mostram `lote_XX_var_YY` e variações. Ver `docs/ANALISE-E-MAPA.md`.
 5. **`sincronizar_nuvem.py` com caminhos absolutos fixos** (`/home/operador/Desktop/...`)
-   e remote `gdrive` hard-coded.
+   e remote `gdrive` hard-coded. → resolvido em `refactor/config` (`config.py`).
 6. **Telemetria do painel corta texto longo** (layout de largura fixa).
 
 ## Roadmap (backlog de manutenção — RV)
@@ -92,6 +111,7 @@ rclone config          # criar um remote chamado "gdrive"
 | RV-05 | Pré-configuração de Wi-Fi |
 | RV-06 | Padronização da nomenclatura de parcelas/linhas + limpeza do histórico |
 | RV-07 | Provisionar o Pi 5 (contas `nero` admin e `operador`) |
+| RV-08 | Protocolo de validação metrológica da contagem (calibração, incerteza) |
 
 ## Créditos
 

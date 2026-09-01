@@ -4,12 +4,16 @@ import cv2
 from picamera2 import Picamera2
 import time
 import os
+import sys
 from datetime import datetime
 import argparse
 
-# --- CONFIGURAÇÃO ---
-INTERVALO_SEGUNDOS = 0.90
-PASTA_PARA_ANALISAR = "imagens_para_analisar"
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import config
+
+# --- CONFIGURAÇÃO (ver config.py) ---
+INTERVALO_SEGUNDOS = config.INTERVALO_CAPTURA_S
+PASTA_PARA_ANALISAR = config.PASTA_PARA_ANALISAR
 os.makedirs(PASTA_PARA_ANALISAR, exist_ok=True)
 
 parser = argparse.ArgumentParser(description="Capturador de imagens para contagem de plântulas.")
@@ -21,8 +25,8 @@ print(f"CAPTURA: A iniciar o capturador para o setor: {SETOR_ATUAL}")
 picam2 = None
 try:
     picam2 = Picamera2()
-    config = picam2.create_still_configuration(main={"size": (1280, 720)})
-    picam2.configure(config)
+    cam_config = picam2.create_still_configuration(main={"size": config.RESOLUCAO_CAPTURA})
+    picam2.configure(cam_config)
     picam2.start()
     print(f"CAPTURA: Câmera pronta. A capturar imagens em '{PASTA_PARA_ANALISAR}'.")
     time.sleep(2.0)

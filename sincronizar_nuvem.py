@@ -3,18 +3,20 @@ import os
 import datetime
 import sys
 
-# ==========================================
-# CAMINHOS LOCAIS NO RASPBERRY PI
-# ==========================================
-PASTA_IMAGENS = "/home/operador/Desktop/Projeto_Soja/imagens_analisadas"
-ARQUIVO_CSV = "/home/operador/Desktop/Projeto_Soja/logs_analise/log_analise_total.csv"
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import config
 
 # ==========================================
-# CAMINHO NA NUVEM (GOOGLE DRIVE)
+# CAMINHOS LOCAIS (ver config.py — derivados de BASE_DIR)
 # ==========================================
-# O rclone vai criar essa pasta principal 'Rover_FAPA_Backups' lá no seu Drive
-NUVEM_DESTINO_IMAGENS = "gdrive:Rover_FAPA_Backups/imagens_analisadas"
-NUVEM_DESTINO_CSV = "gdrive:Rover_FAPA_Backups/relatorios"
+PASTA_IMAGENS = config.PASTA_ANALISADAS
+ARQUIVO_CSV = config.ARQUIVO_CSV
+
+# ==========================================
+# CAMINHO NA NUVEM (rclone remote — ver config.py)
+# ==========================================
+NUVEM_DESTINO_IMAGENS = config.NUVEM_DESTINO_IMAGENS
+NUVEM_DESTINO_CSV = config.NUVEM_DESTINO_CSV
 
 def sincronizar():
     agora = datetime.datetime.now().strftime('%H:%M:%S')

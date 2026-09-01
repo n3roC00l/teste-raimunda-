@@ -4,30 +4,31 @@ import torch
 import cv2
 import time
 import os
+import sys
 import csv
 from datetime import datetime
 import json
 import math
 
-INTERVALO_VERIFICACAO = 2
-MODELO_IA_PATH = 'yolov5/best_soja_final_97_5.pt'
-CONFIANCA_IA = 0.70
-CLASSE_IA = [0]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import config
 
-TAXA_PRECISAO = 0.934
-TAXA_RECALL = 0.921
+INTERVALO_VERIFICACAO = config.INTERVALO_VERIFICACAO_S
+MODELO_IA_PATH = config.MODELO_PATH
+YOLOV5_DIR = config.YOLOV5_DIR
+CONFIANCA_IA = config.CONFIANCA_IA
+CLASSE_IA = config.CLASSES_IA
 
-DIRETORIO_BASE = os.path.dirname(os.path.abspath(__file__))
-PASTA_PARA_ANALISAR = os.path.join(DIRETORIO_BASE, "imagens_para_analisar")
-PASTA_ANALISADAS = os.path.join(DIRETORIO_BASE, "imagens_analisadas")
-PASTA_LOGS = os.path.join(DIRETORIO_BASE, "logs_analise")
-PASTA_ERROS = os.path.join(DIRETORIO_BASE, "imagens_com_erro")
-os.makedirs(PASTA_PARA_ANALISAR, exist_ok=True)
-os.makedirs(PASTA_ANALISADAS, exist_ok=True)
-os.makedirs(PASTA_LOGS, exist_ok=True)
-os.makedirs(PASTA_ERROS, exist_ok=True)
-ARQUIVO_CSV = os.path.join(PASTA_LOGS, "log_analise_total.csv")
-ARQUIVO_STATUS = os.path.join(PASTA_LOGS, 'status_analise.json') 
+TAXA_PRECISAO = config.TAXA_PRECISAO
+TAXA_RECALL = config.TAXA_RECALL
+
+PASTA_PARA_ANALISAR = config.PASTA_PARA_ANALISAR
+PASTA_ANALISADAS = config.PASTA_ANALISADAS
+PASTA_LOGS = config.PASTA_LOGS
+PASTA_ERROS = config.PASTA_ERROS
+config.garantir_pastas()
+ARQUIVO_CSV = config.ARQUIVO_CSV
+ARQUIVO_STATUS = config.ARQUIVO_STATUS
 
 def inicializar_csv():
     """Verifica se o CSV existe e, se não, cria-o com o cabeçalho."""
@@ -93,7 +94,7 @@ if __name__ == "__main__":
     print("ANALISADOR: A carregar o modelo de IA. Por favor, aguarde...")
     
     try:
-        modelo_ia = torch.hub.load('yolov5', 'custom', path=MODELO_IA_PATH, source='local')
+        modelo_ia = torch.hub.load(YOLOV5_DIR, 'custom', path=MODELO_IA_PATH, source='local')
         modelo_ia.conf = CONFIANCA_IA
         modelo_ia.classes = CLASSE_IA
         print("ANALISADOR: Modelo carregado com sucesso. A iniciar monitorização da pasta.")

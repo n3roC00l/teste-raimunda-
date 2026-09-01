@@ -36,6 +36,9 @@ rclone.conf
 *.key
 *.token
 
+# --- Override de config por máquina (ver config_local.example.py) ---
+config_local.py
+
 # --- SO / editores ---
 .DS_Store
 Thumbs.db

@@ -6,11 +6,14 @@ import threading
 import json
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import config
+
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("Estação de Controlo de Captura v2.5 - Rover FAPA")
-        self.root.geometry("780x580") 
+        self.root.title(f"Estação de Controlo de Captura v{config.VERSAO} - Rover FAPA")
+        self.root.geometry("780x580")
         self.root.configure(bg="#f4f4f4") 
 
         self.capturador_process = None
@@ -21,7 +24,7 @@ class App:
         self.total_plantulas = 0
         self.ultima_foto_processada = ""
         
-        self.status_file = os.path.join(os.getcwd(), 'logs_analise', 'status_analise.json')
+        self.status_file = config.ARQUIVO_STATUS
 
         title_font = font.Font(family="Helvetica", size=12, weight="bold")
         label_font = font.Font(family="Helvetica", size=11)
@@ -168,7 +171,7 @@ class App:
         self.lbl_plant_count.config(text="--")
         
         python_executable = sys.executable
-        caminho_capturador = os.path.join(os.getcwd(), 'capturador.py')
+        caminho_capturador = config.SCRIPT_CAPTURADOR
         command = [python_executable, '-u', caminho_capturador, '--setor', setor_nome]
         
         self.capturador_process = subprocess.Popen(
@@ -215,7 +218,7 @@ class App:
         try:
             python_executable = sys.executable
             # Chama o script que criamos na etapa anterior!
-            caminho_script = os.path.join(os.getcwd(), 'sincronizar_nuvem.py')
+            caminho_script = config.SCRIPT_SINCRONIZAR
             subprocess.run([python_executable, caminho_script], check=True)
             
             self.root.after(0, lambda: messagebox.showinfo("Sucesso", "Backup concluído!\nAs imagens e o relatório CSV já estão seguros no Google Drive."))
@@ -239,7 +242,7 @@ class App:
 
     def start_analyzer(self):
         python_executable = sys.executable
-        caminho_analisador = os.path.join(os.getcwd(), 'analisador_em_background.py')
+        caminho_analisador = config.SCRIPT_ANALISADOR
         print("A iniciar o analisador em segundo plano...")
         self.analyzer_process = subprocess.Popen([python_executable, caminho_analisador])
         
