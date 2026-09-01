@@ -5,6 +5,30 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `refactor/ui-split` — painel dividido em `ui/`
+
+**Adicionado**
+- `ui/painel.py` — a classe `App` (movida de `painel_controle.py`, lógica
+  idêntica método a método).
+- `ui/widgets.py` — 4 funções que montam cada bloco da tela (Configurações
+  do Experimento, Controles, Visão Computacional, Telemetria); mesmas
+  classes Tk, mesmas opções, mesmo texto de antes.
+- `ui/tema.py` — cores (hex idênticos ao original) e fontes centralizadas
+  em `Fontes` (uma instância por `App`, precisa de um `tk.Tk()` já criado).
+
+**Alterado**
+- `painel_controle.py` virou um shim: `from ui.painel import App, main`;
+  `./iniciar_aplicacao.sh` continua funcionando sem mudança.
+- `tests/test_characterization_painel.py` passa a importar `ui.painel` em
+  vez de `painel_controle` (o resto do arquivo — todos os asserts — não
+  mudou uma linha).
+
+**Comportamento:** nenhum. Verificado: suite completa (47 casos) passa sem
+alterar nenhuma asserção; screenshot headless (Xvfb) do painel rodado via
+`python painel_controle.py` é visualmente idêntico ao de antes do split.
+`docs/MELHORIAS.md` frentes #6 e #7 (Parnas 1972 — separar o que muda
+[layout, `feat/ui-v1`] do que não muda agora).
+
 ### testes de caracterização — antes do `refactor/ui-split`
 
 **Adicionado**
