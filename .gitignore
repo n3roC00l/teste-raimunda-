@@ -45,6 +45,11 @@ config_local.py
 programacao_semeadora.csv
 programacao_semeadora.xlsx
 
+# --- Planilhas exportadas (resultado da campanha) ---
+export_*.csv
+export_*.xlsx
+logs_analise/*.legado-*.csv
+
 # --- SO / editores ---
 .DS_Store
 Thumbs.db
