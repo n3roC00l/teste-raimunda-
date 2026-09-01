@@ -2,6 +2,7 @@
 
 Plano de estruturação e primeira iteração do `painel_controle.py`.
 Base: [ANALISE-E-MAPA.md](ANALISE-E-MAPA.md). Data: 2026-08-31.
+Contexto e embasamento das 8 frentes de melhoria: [MELHORIAS.md](MELHORIAS.md).
 
 ## Decisões travadas
 
