@@ -78,10 +78,33 @@ caminho absoluto nem constante espalhada.
   sobrescreva só o que mudar.
 - **Segredos** (`rclone.conf`) ficam no sistema, **nunca** em `config.py`.
 
-Smoke test: `python -m pytest tests/ -q`
-
 Ref.: *The Twelve-Factor App* (fator III); Parnas (1972). Ver
 [`docs/MELHORIAS.md`](docs/MELHORIAS.md) frente #1.
+
+## Testes
+
+```bash
+pip install -r requirements-dev.txt   # só pytest — não precisa do requirements.txt completo
+python -m pytest tests/ -q
+```
+
+Não precisa de câmera, GPU, `torch`/`cv2`/`picamera2` nem `rclone` instalados
+— os testes usam dublês (`FakeModel`, `subprocess.run`/`Popen` substituídos)
+e, quando um módulo pesado já está instalado (no Pi), usam o de verdade sem
+diferença de comportamento.
+
+- `test_config.py`, `test_status.py` — contrato de `config.py` e `core/status.py`.
+- `test_characterization_*.py` — **testes de caracterização**: travam o
+  comportamento atual de `analisador_em_background.py`, `sincronizar_nuvem.py`
+  e `painel_controle.py` (GUI real, via Xvfb se não houver `$DISPLAY`) antes
+  de qualquer refactor. Se um destes quebrar depois de uma mudança que
+  deveria ser "só reorganizar código", é regressão — investigar antes de
+  atualizar o teste. Ref.: Feathers, *Working Effectively with Legacy Code*
+  (2004).
+- `CHECKLIST-CAMPO.md` — o que só dá para caracterizar no Pi com hardware
+  real (câmera, modelo, `rclone`).
+
+Ver [`docs/MELHORIAS.md`](docs/MELHORIAS.md) frente #7.
 
 ## Bugs conhecidos (não corrigidos neste marco zero)
 

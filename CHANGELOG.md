@@ -5,6 +5,37 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### testes de caracterização — antes do `refactor/ui-split`
+
+**Adicionado**
+- `tests/test_characterization_analisador.py` — golden master de
+  `calcular_contagem_ajustada` (fórmula atual pinada) + `analisar_imagem`
+  fim-a-fim (CSV, status, acumulado, troca de parcela, caminho de erro) com
+  um `FakeModel` injetado (não precisa de `torch`/`cv2` reais).
+- `tests/test_characterization_sincronizar.py` — comandos `rclone` exatos
+  que `sincronizar()` monta, sem precisar do `rclone` instalado
+  (`subprocess.run` substituído).
+- `tests/test_characterization_capturador.py` — pin por inspeção de código-
+  fonte (formato do nome do arquivo, `--setor` obrigatório); documenta que o
+  script não é importável fora do Pi (abre a câmera fora do `if __name__ ==
+  "__main__"`).
+- `tests/test_characterization_painel.py` — `painel_controle.App` real sob
+  Tkinter (`$DISPLAY` existente ou `Xvfb` descartável via `tests/conftest.py`),
+  estado inicial dos widgets, `start_capture`/`stop_capture`,
+  `update_dashboard` com status válido/de outra parcela/pré-schema/ausente,
+  `exit_app`.
+- `tests/CHECKLIST-CAMPO.md` — o que só dá para caracterizar no Pi com
+  câmera, modelo e `rclone` reais.
+- `requirements-dev.txt` (só `pytest`), `pytest.ini`.
+
+**Por quê:** antes de quebrar `painel_controle.py` em `ui/` (`refactor/ui-
+split`), travar o comportamento atual como *golden master* — se o split for
+"só reorganizar", estes testes continuam passando sem alteração. Suite
+total: 47 casos. Ref.: Feathers (2004); Sandve et al. (2013, regra 8).
+`docs/MELHORIAS.md` frente #7.
+
+**Comportamento:** nenhum — só testes.
+
 ### `refactor/status-schema` — schema único do status_analise.json
 
 **Adicionado**

@@ -1,0 +1,10 @@
+# Dependências de desenvolvimento/teste (NÃO instalar no Pi de produção —
+# ver requirements.txt para o runtime do rover).
+#
+#   pip install -r requirements-dev.txt
+#
+# Os testes de caracterização rodam sem torch/cv2/picamera2/rclone reais
+# (ver tests/test_characterization_*.py) — não precisa do requirements.txt
+# completo para rodar `pytest tests/`.
+
+pytest>=7.4
