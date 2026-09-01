@@ -27,6 +27,9 @@ ultralytics>=8.2.64  # https://ultralytics.com
 pandas>=1.1.4
 seaborn>=0.11.0
 
+# Rover -----------------------------------------------------------------------
+openpyxl>=3.1  # ler a planilha da semeadora em .xlsx (core/parcela.py); .csv não precisa
+
 # Export ----------------------------------------------------------------------
 # coremltools>=6.0  # CoreML export
 # onnx>=1.10.0  # ONNX export

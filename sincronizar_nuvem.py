@@ -48,8 +48,14 @@ def sincronizar():
         else:
             print(f"Aviso: O arquivo {ARQUIVO_CSV} ainda não foi criado. Pulando etapa.")
             
+        try:
+            with open(config.ARQUIVO_ULTIMA_SYNC, "w", encoding="utf-8") as f:
+                f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        except OSError:
+            pass
+
         print(f"\n[{datetime.datetime.now().strftime('%H:%M:%S')}] ✅ Sincronização 100% concluída!")
-        
+
     except subprocess.CalledProcessError as e:
         print(f"\n❌ Erro ao sincronizar. Detalhes: {e}")
         # Retorna código de erro para o painel Tkinter saber que falhou

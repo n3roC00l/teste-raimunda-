@@ -15,7 +15,7 @@ para o Google Drive.
 
 ```mermaid
 flowchart LR
-    OP([Operador]) -->|Tratamento + Linha| P[painel_controle.py]
+    OP([Operador]) -->|Experimento + X/Y/Linha| P[painel_controle.py]
     P -->|--setor| C[capturador.py] --> CAM[/Câmera/]
     C -->|1 foto / 0,90 s| Q[(imagens_para_analisar/)]
     Q --> A[analisador_em_background.py] --> M[[yolov5/best_soja_final_97_5.pt]]
@@ -36,6 +36,7 @@ flowchart LR
 | `capturador.py` | Captura contínua pela câmera (`picamera2`), 1 foto a cada 0,90 s, 1280×720. |
 | `analisador_em_background.py` | Vigia a pasta, roda YOLOv5, aplica correção estatística, grava CSV/JSON. |
 | `core/status.py` | Schema único do `status_analise.json` (leitura/escrita atômica). |
+| `core/parcela.py` | Modelo da parcela (`X3Y7L2`) + navegador da campanha (segue a planilha da semeadora ou incremento aritmético). |
 | `sincronizar_nuvem.py` | `rclone copy` das imagens e do CSV para o remote configurado. |
 | `iniciar_aplicacao.sh` | Arranque: ativa o `venv` e roda o painel. |
 | `detector_backend.py` | Classe `YoloDetector` usada pelas GUIs de teste. |
@@ -110,6 +111,26 @@ diferença de comportamento.
 
 Ver [`docs/MELHORIAS.md`](docs/MELHORIAS.md) frente #7.
 
+## Parcela / campanha (`core/parcela.py`)
+
+O painel identifica cada setor como **`X{x}Y{y}L{linha}`** (ex.: `X3Y7L2`) —
+formato configurável em `config.PARCELA_FORMATO`. O botão **Próxima (F2)** anda
+linha 1→2→3 e depois o próximo plot.
+
+- **Modo campanha:** coloque a planilha de programação da semeadora como
+  `programacao_semeadora.csv` (ou `.xlsx`) na raiz do projeto. O rover carrega a
+  ordem dos plots (colunas `Parcela Larg. (X)` / `Parcela Compr.(Y)`) e o nome do
+  experimento (`ID Opcional`); "Próxima" segue a sequência da planilha
+  (`plot 47 de 216`). Exemplo em `docs/exemplos/`.
+- **Modo manual:** sem planilha, "Próxima" incrementa X/Y nas faixas de
+  `config.PARCELA_X_MIN..MAX` / `..Y..`.
+- A posição é **persistida** (`logs_analise/parcela_atual.json`) — o painel retoma
+  onde parou depois de reiniciar.
+
+Aberto com o Leandro: formato exato do identificador (zero à esquerda? separador?),
+ordem das 3 linhas. Ver `docs/ANALISE-E-MAPA.md` e a nota `Planilha da semeadora`
+no vault.
+
 ## Bugs conhecidos (não corrigidos neste marco zero)
 
 1. **"TOTAL ACUMULADO" fica sempre em 0.** O `analisador_em_background.py` grava
@@ -124,6 +145,8 @@ Ver [`docs/MELHORIAS.md`](docs/MELHORIAS.md) frente #7.
 4. **Nomenclatura de parcelas inconsistente** — o CSV real tem 11 padrões diferentes de
    `setor_imagem` + 97 linhas vazias. O código gera `trat_{Tratamento}_linha_{Linha}`,
    mas os dados mostram `lote_XX_var_YY` e variações. Ver `docs/ANALISE-E-MAPA.md`.
+   → resolvido em `feat/parcela`: identificador estruturado `X{x}Y{y}L{linha}`
+   (`core/parcela.py`), navegação por plot. Falta a limpeza/migração do histórico (RV-06).
 5. **`sincronizar_nuvem.py` com caminhos absolutos fixos** (`/home/operador/Desktop/...`)
    e remote `gdrive` hard-coded. → resolvido em `refactor/config` (`config.py`).
 6. **Telemetria do painel corta texto longo** (layout de largura fixa).

@@ -59,6 +59,12 @@ class Fontes:
         self.legenda = font.Font(family="Helvetica", size=10)
         self.mini = font.Font(family="Helvetica", size=9)
         self.botao = font.Font(family="Helvetica", size=12, weight="bold")
+        # faixa da parcela
+        self.cell_rotulo = font.Font(family="Helvetica", size=8, weight="bold")
+        self.cell_valor = font.Font(family="Helvetica", size=16, weight="bold")
+        self.identificador = font.Font(family="DejaVu Sans Mono", size=20, weight="bold")
+        self.link = font.Font(family="Helvetica", size=10)
+        self.nav = font.Font(family="Helvetica", size=10, weight="bold")
 
 
 # mapeia analisador_estado (core/status.py) -> (texto, cor)

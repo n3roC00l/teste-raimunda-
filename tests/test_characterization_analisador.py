@@ -208,6 +208,61 @@ def test_erro_do_modelo_move_para_pasta_de_erro_e_nao_grava_nada(tmp_path, monke
     assert status_mod.ler(str(status_path)) is None  # status nunca foi escrito
 
 
+def test_progresso_por_linha_com_identificador_estruturado(tmp_path, monkeypatch):
+    pendentes, *_ , status_path = _preparar_pastas(tmp_path, monkeypatch)
+    modelo = FakeModel([10, 8, 20, 5])
+
+    # plot X3Y7: linha 1 (2 fotos), linha 2 (1 foto), depois plot X3Y8 linha 1
+    for nome in [
+        "X3Y7L1_2026-02-03_10-00-00-000001.jpg",
+        "X3Y7L1_2026-02-03_10-00-01-000002.jpg",
+        "X3Y7L2_2026-02-03_10-05-00-000003.jpg",
+        "X3Y8L1_2026-02-03_10-10-00-000004.jpg",
+    ]:
+        caminho = pendentes / nome
+        caminho.write_bytes(b"x")
+        an.analisar_imagem(str(caminho), modelo)
+
+    st = status_mod.ler(str(status_path))
+    assert st.plot == "X3Y8"           # plot corrente (mudou)
+    assert st.linha == 1
+    assert st.total_linha_1 == 6       # só a foto do X3Y8L1 (10->11? não: golden 5->6)
+    assert st.total_linha_2 == 0       # zerou ao trocar de plot
+    assert st.total_linha_3 == 0
+
+
+def test_progresso_por_linha_acumula_no_mesmo_plot(tmp_path, monkeypatch):
+    pendentes, *_ , status_path = _preparar_pastas(tmp_path, monkeypatch)
+    modelo = FakeModel([10, 10, 8])
+
+    for nome in [
+        "X3Y7L1_2026-02-03_10-00-00-000001.jpg",
+        "X3Y7L1_2026-02-03_10-00-01-000002.jpg",
+        "X3Y7L2_2026-02-03_10-05-00-000003.jpg",
+    ]:
+        caminho = pendentes / nome
+        caminho.write_bytes(b"x")
+        an.analisar_imagem(str(caminho), modelo)
+
+    st = status_mod.ler(str(status_path))
+    assert st.total_linha_1 == 22      # 11 + 11 (golden 10->11)
+    assert st.total_linha_2 == 9       # golden 8->9
+    assert st.total_plot_corrigido == 31
+
+
+def test_nome_antigo_nao_preenche_progresso_por_linha(tmp_path, monkeypatch):
+    pendentes, *_ , status_path = _preparar_pastas(tmp_path, monkeypatch)
+    caminho = pendentes / "trat_A_linha_1_2026-02-03_10-00-00-000001.jpg"
+    caminho.write_bytes(b"x")
+    an.analisar_imagem(str(caminho), FakeModel([10]))
+
+    st = status_mod.ler(str(status_path))
+    assert st.plot == ""
+    assert st.linha == 0
+    assert (st.total_linha_1, st.total_linha_2, st.total_linha_3) == (0, 0, 0)
+    assert st.total_parcela_corrigido == 11   # o acumulado por parcela ainda funciona
+
+
 def test_retomar_acumulado_le_status_existente(tmp_path, monkeypatch):
     _, _, _, _, status_path = _preparar_pastas(tmp_path, monkeypatch)
     status_mod.escrever(str(status_path), status_mod.StatusAnalise(

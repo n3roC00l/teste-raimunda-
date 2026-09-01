@@ -5,6 +5,42 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `feat/parcela` — parcela estruturada + navegação + progresso do plot
+
+**Adicionado**
+- `core/parcela.py` — `Parcela` (experimento + X + Y + linha), `identificador`
+  (`X{x}Y{y}L{linha}`, configurável em `config.PARCELA_FORMATO`),
+  `parse_identificador`, `carregar_plots` (Plan1 em .csv/.xlsx) e `Navegador`
+  (modo campanha = segue a planilha; modo manual = incremento aritmético;
+  persiste a posição, retoma onde parou).
+- `tests/test_parcela.py` (12 casos).
+- Config: `PARCELA_FORMATO` / `PLOT_FORMATO`, faixas `PARCELA_X/Y_MIN/MAX`,
+  `PARCELA_LINHAS`, `PLANILHA_PROGRAMACAO`, `ARQUIVO_PARCELA`,
+  `EXPERIMENTO_PADRAO`, `ARQUIVO_ULTIMA_SYNC`.
+
+**Alterado**
+- `core/status.py` **schema 2**: `experimento`, `plot`, `linha`,
+  `total_linha_1/2/3`, `total_plot_corrigido` (property). `ler()` aceita
+  schema 1 (upgrade transparente).
+- `analisador_em_background.py` — além do acumulado por parcela, agora
+  **acumula por linha dentro do plot** (parseia `X3Y7L2` → plot `X3Y7`,
+  linha 2). Nomes antigos (`trat_A_linha_1`) continuam funcionando (sem
+  progresso por linha). CSV inalterado (RV-06).
+- `ui/` — faixa da amostra (Experimento + `editar`; Parcela: X/Y/Linha,
+  identificador, `plot N de M`, ◂ / **Próxima ▸ F2**), card **Progresso da
+  parcela** (linha 1/2/3 + total do plot), Estado do sistema com **última
+  sync** + **aguardando sync** + **disco livre**. Campos livres
+  Tratamento/Linha saíram — a parcela agora vem do navegador. Navegação
+  travada durante a captura.
+- `sincronizar_nuvem.py` grava `logs_analise/ultima_sync.txt` no sucesso.
+- `requirements.txt`: `openpyxl` (só p/ planilha .xlsx).
+
+**Comportamento:** muda (nova forma de escolher a parcela). A máquina de
+estados de captura e a regra do TOTAL por parcela continuam iguais e
+testadas. `tests/test_characterization_painel.py` reescrito para o novo
+modelo. Suite: 71 casos. Verificado por screenshot headless (Xvfb) em modo
+campanha. `docs/MELHORIAS.md` frentes #5 e #6; RV-02 / RV-06.
+
 ### `feat/ui-v1` — sistema visual novo + faixas + atalhos
 
 **Alterado (visual — muda o que o operador vê)**
