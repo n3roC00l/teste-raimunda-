@@ -1,11 +1,10 @@
 # raimunda — Rover Contador de Plântulas de Soja (FAPA)
 
-**Marco zero.** Este repositório é uma cópia fiel do sistema **v2.0** do rover que roda hoje
-no Raspberry Pi da FAPA, tirada em 2026-08-31 a partir do backup do Google Drive.
-A partir daqui todas as mudanças ficam versionadas — este commit inicial é a linha de base.
+Cópia do sistema **v2.0** do rover (marco zero, 2026-08-31, do backup do Google Drive) →
+em evolução para **v2.1** (10 PRs). **Estado atual e o que falta:** [`docs/STATUS.md`](docs/STATUS.md).
 
-> ⚠️ O código está **como estava**, sem correções. Os bugs conhecidos estão listados
-> abaixo e detalhados em [`docs/ANALISE-E-MAPA.md`](docs/ANALISE-E-MAPA.md).
+> O commit `4d7ac16` é a linha de base sem correções ("marco zero"); a lista de bugs
+> conhecidos abaixo é daquele ponto — a maioria já foi resolvida (ver [`CHANGELOG.md`](CHANGELOG.md)).
 
 ## O que o sistema faz
 
@@ -188,16 +187,18 @@ que aconteceu (auditoria).
 
 ## Roadmap (backlog de manutenção — RV)
 
-| ID | Item |
-|---|---|
-| RV-01 | Eixo móvel na traseira do rover (mecânica) |
-| RV-02 | Botão de troca automática de parcela no teclado |
-| RV-03 | Case móvel para o display |
-| RV-04 | Sincronização em nuvem apontando para a conta do pesquisador |
-| RV-05 | Pré-configuração de Wi-Fi |
-| RV-06 | Padronização da nomenclatura de parcelas/linhas + limpeza do histórico |
-| RV-07 | Provisionar o Pi 5 (contas `nero` admin e `operador`) |
-| RV-08 | Protocolo de validação metrológica da contagem (calibração, incerteza) |
+Status detalhado em [`docs/STATUS.md`](docs/STATUS.md).
+
+| ID | Item | Situação |
+|---|---|---|
+| RV-01 | Eixo móvel na traseira do rover (mecânica) | aberto |
+| RV-02 | Botão de troca automática de parcela | **software pronto** · confirmar formato c/ Leandro |
+| RV-03 | Case móvel para o display | com o Felipe |
+| RV-04 | Sincronização em nuvem na conta do pesquisador | script pronto · falta conta/autorização |
+| RV-05 | Pré-configuração de Wi-Fi | aberto (falta SSID/senha) |
+| RV-06 | Padronização da nomenclatura + limpeza do histórico | **CSV + export prontos** · confirmar formato c/ Leandro |
+| RV-07 | Provisionar o Pi 5 (contas `nero` e `operador`) | `deploy/` pronto · falta rodar no Pi |
+| RV-08 | Validação metrológica da contagem (calibração, incerteza) | aberto — **precisa de ida a campo** |
 
 ## Créditos
 
