@@ -60,6 +60,7 @@ def sem_efeitos_reais(monkeypatch):
 def app(tk_root, tmp_path, monkeypatch):
     monkeypatch.setattr(pc.config, "ARQUIVO_STATUS", str(tmp_path / "status.json"))
     monkeypatch.setattr(pc.config, "ARQUIVO_PARCELA", str(tmp_path / "parcela.json"))
+    monkeypatch.setattr(pc.config, "ARQUIVO_SETOR", str(tmp_path / "setor_atual.txt"))
     monkeypatch.setattr(pc.config, "ARQUIVO_ULTIMA_SYNC", str(tmp_path / "sync.txt"))
     monkeypatch.setattr(pc.config, "ARQUIVO_EVENTOS", str(tmp_path / "eventos.jsonl"))
     monkeypatch.setattr(pc.config, "PLANILHA_PROGRAMACAO", str(tmp_path / "sem_planilha.csv"))
@@ -144,12 +145,29 @@ def test_editar_experimento(app, monkeypatch):
     assert app._am["lbl_exp"].cget("text") == "Ensaio Pinhão 2026"
 
 
-def test_navegacao_bloqueada_durante_captura(app):
-    app.start_capture()
-    ident_antes = app._am["lbl_ident"].cget("text")
+def test_proxima_durante_captura_troca_carreira_sem_parar(app):
+    app.start_capture()                       # setor_atual = X1Y1L1
+    assert app.is_running
+    assert str(app._am["btn_prox"].cget("state")) == "normal"   # Próxima segue ativa
+    assert str(app._am["btn_ant"].cget("state")) == "disabled"  # ◂ Voltar trava
+
+    setor_arquivo = pc.config.ARQUIVO_SETOR
+    assert open(setor_arquivo).read().strip() == "X1Y1L1"
+
     app.parcela_proxima()
-    assert app._am["lbl_ident"].cget("text") == ident_antes
-    assert str(app._am["btn_prox"].cget("state")) == "disabled"
+
+    assert app.is_running                      # NÃO parou a captura
+    assert app.setor_atual == "X1Y1L2"
+    assert app._am["lbl_ident"].cget("text") == "X1Y1L2"
+    assert open(setor_arquivo).read().strip() == "X1Y1L2"       # capturador vai ler isto
+    assert app.lbl_total_count.cget("text") == "0"              # contadores zerados
+
+
+def test_voltar_continua_bloqueado_durante_captura(app):
+    app.start_capture()
+    ident = app._am["lbl_ident"].cget("text")
+    app.parcela_anterior()
+    assert app._am["lbl_ident"].cget("text") == ident
 
 
 # ---------------------------------------------------------------------------

@@ -5,6 +5,30 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `feat/troca-carreira-ao-vivo` — mudar de carreira sem parar a câmera
+
+**Adicionado**
+- `core/io_atomico.py` — escrita atômica (`escrever_texto` / `escrever_json` /
+  `escrever_bytes`). `core/status.py` e `core/parcela.py` passam a usar (era
+  código duplicado 3×). `tests/test_io_atomico.py` (5).
+- `config.ARQUIVO_SETOR` (`logs_analise/setor_atual.txt`).
+
+**Alterado**
+- `capturador.py` — `--setor` vira opcional; o setor é **relido de
+  `config.ARQUIVO_SETOR` a cada foto**. Trocar de carreira não reinicia mais
+  a câmera.
+- `ui/painel.py` — o botão **Próxima (F2) fica ativo durante a captura**: ao
+  apertar, o painel grava o novo identificador no arquivo (atômico), atualiza
+  `setor_atual` e zera os contadores; a câmera segue rodando. `◂ Voltar` e
+  `editar experimento` continuam travados na captura. `start_capture` grava o
+  arquivo antes de subir o capturador.
+
+**Comportamento:** a navegação deixa de exigir parar a captura. O analisador
+já lida com a troca (parseia o setor do nome do arquivo; acumula por linha) —
+a linha anterior congela, a nova começa a somar. Trade-off: ~1 foto na
+fronteira pode cair na linha anterior (<1 s de percurso). Suite: 101 casos.
+`docs/MELHORIAS.md` frente #5; RV-02.
+
 ### `feat/export-csv` — CSV canônico + export para a planilha (RV-06)
 
 **Adicionado**

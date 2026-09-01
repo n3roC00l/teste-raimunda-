@@ -20,12 +20,12 @@ import json
 import os
 import re
 import sys
-import tempfile
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
+from . import io_atomico
 
 
 # ---------------------------------------------------------------------------
@@ -220,22 +220,7 @@ class Navegador:
         }
 
     def salvar(self, caminho=None):
-        caminho = caminho or config.ARQUIVO_PARCELA
-        pasta = os.path.dirname(caminho) or "."
-        os.makedirs(pasta, exist_ok=True)
-        fd, tmp = tempfile.mkstemp(dir=pasta, prefix=".parcela_", suffix=".json")
-        try:
-            with os.fdopen(fd, "w", encoding="utf-8") as f:
-                json.dump(self.to_dict(), f, ensure_ascii=False, indent=2)
-                f.flush()
-                os.fsync(f.fileno())
-            os.replace(tmp, caminho)
-        except BaseException:
-            try:
-                os.unlink(tmp)
-            except OSError:
-                pass
-            raise
+        io_atomico.escrever_json(caminho or config.ARQUIVO_PARCELA, self.to_dict())
 
     def restaurar(self, caminho=None):
         """Recarrega posição de disco. Silencioso se não houver/for inválido."""
