@@ -5,6 +5,39 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `feat/ui-v1` — sistema visual novo + faixas + atalhos
+
+**Alterado (visual — muda o que o operador vê)**
+- `ui/tema.py` — paleta por tokens, tema escuro (`BG`/`BG2`/`LINE` ·
+  `T1`/`T2`/`T3` · `ACC` · `OK`/`WARN`/`STOP`), como no plano e no mock
+  `docs/screenshots/mock-painel-v1.png`. Cor só significa status; ACC só no
+  acento. Ref.: High Performance HMI Handbook / ISA-101.
+- `ui/widgets.py` — reescrito em blocos de cartão (`cartao`, `titulo_secao`,
+  `linha_kv`, `linha_kv_status`) + `montar_topo/contagem/estado_sistema/acoes`.
+- `ui/painel.py` — layout em faixas: topo (título + **pílula de status**) →
+  Configurações do Experimento → **Contagem** \| **Estado do sistema** →
+  ações. Novidades funcionais:
+  - "última foto" mostra a contagem **corrigida** + a **bruta** ("detecção IA");
+  - **fila de análise** visível (`fila_pendente`), âmbar quando > 0;
+  - **estado real do analisador** na pílula e no cartão
+    (`carregando modelo… / pronto / analisando / erro`) — fecha
+    `feat/estado-analisador`, já que o analisador reporta desde `status-schema`;
+  - **atalhos** F5 (iniciar/parar) · F9 (sincronizar) · Ctrl+Q (sair);
+  - telemetria não corta mais texto (sem largura fixa);
+  - janela redimensionável, mínimo 820×560.
+
+**Fora de escopo (fica para `feat/parcela` — RV-02/RV-06)**
+- Faixa "Parcela" do mock: campos X/Y/Linha, identificador `X3Y7L2`, botão
+  "Próxima", card "Progresso da parcela" com linha 1/2/3. Depende de carregar
+  a planilha da semeadora — o painel ainda usa os campos Tratamento + Linha
+  de hoje.
+
+**Comportamento não-visual:** inalterado. `tests/test_characterization_painel.py`
+atualizado para o novo golden master (valores de texto/cor); a máquina de
+estados de captura e a regra do TOTAL por parcela continuam iguais e
+testadas. Suite: 50 casos. Verificado por screenshot headless (Xvfb).
+`docs/MELHORIAS.md` frente #6.
+
 ### `refactor/ui-split` — painel dividido em `ui/`
 
 **Adicionado**

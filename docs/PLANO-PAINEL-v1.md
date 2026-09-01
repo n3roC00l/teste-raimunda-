@@ -69,11 +69,22 @@ class StatusAnalise:
 
 ## Camada 1 — layout novo
 
-### Mock (Tkinter, tema escuro)
+### Implementado (`feat/ui-v1`)
+
+![](screenshots/painel-v1-real.png)
+
+> A tela real (dados de exemplo via `status_analise.json`). O mock original
+> abaixo tinha a faixa "Parcela" (X/Y/Linha, `X3Y7L2`, "Próxima") e o card
+> "Progresso da parcela" — isso depende de carregar a planilha da semeadora e
+> ficou para o `feat/parcela` (RV-02/RV-06). O `feat/ui-v1` entregou: tema por
+> tokens, faixas, pílula de status, fila visível, estado real do analisador,
+> atalhos F5/F9/Ctrl+Q, telemetria sem corte.
+
+### Mock original (Tkinter, tema escuro)
 
 ![](screenshots/mock-painel-v1.png)
 
-> Mock estático só do layout — dados de exemplo. Gerado com `Xvfb` a partir de `mock_v1.py`.
+> Mock estático só do layout — dados de exemplo. Gerado com `Xvfb` a partir de `mocks/mock_v1.py`.
 
 ### Wireframe
 
@@ -173,13 +184,15 @@ O histórico antigo (11 padrões, 97 linhas vazias) era teste → provável **de
 
 ## Ordem de implementação (PRs pequenos)
 
-| PR | Entrega | Muda comportamento? |
-|---|---|---|
-| `refactor/config` | `config.py`, tira hard-coded de todos os scripts | não |
-| `refactor/status-schema` | `core/status.py`; analisador + painel usam. **Corrige o TOTAL.** | sim (bug fix) |
-| `refactor/ui-split` | quebra `painel_controle.py` em `ui/` | não (visual igual) |
-| `feat/ui-v1` | `tema.py` + layout dos 3 blocos + barra de status + atalhos | sim (visual) |
-| `feat/estado-analisador` | analisador reporta estado; painel exibe | sim |
+| PR | Entrega | Muda comportamento? | Status |
+|---|---|---|---|
+| `refactor/config` | `config.py`, tira hard-coded de todos os scripts | não | ✅ `3405ad9` |
+| `refactor/status-schema` | `core/status.py`; analisador + painel usam. **Corrige o TOTAL.** | sim (bug fix) | ✅ `24e28b0` |
+| (caracterização) | golden master antes do split — `tests/test_characterization_*` | não | ✅ `d769a5c` |
+| `refactor/ui-split` | quebra `painel_controle.py` em `ui/` | não (visual igual) | ✅ `151395c` |
+| `feat/ui-v1` | `tema.py` + faixas + pílula de status + atalhos | sim (visual) | ✅ |
+| `feat/estado-analisador` | analisador reporta estado; painel exibe | sim | ✅ absorvido no `status-schema` + `ui-v1` |
+| `feat/parcela` | faixa Parcela: carrega `Plan1`, X/Y/Linha, "Próxima" | sim | ⬜ RV-02/RV-06 |
 
 Cada PR é testável rodando o painel headless (`Xvfb` + screenshot), como já foi feito na análise.
 

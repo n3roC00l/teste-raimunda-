@@ -1,11 +1,25 @@
 """
-ui/painel.py — a tela (era painel_controle.py até refactor/ui-split).
+ui/painel.py — a tela (feat/ui-v1: sistema visual novo + faixas + atalhos).
 
-`refactor/ui-split` só reorganiza: a lógica de cada método é idêntica à
-versão anterior, só a montagem dos widgets foi movida para
-`ui/widgets.py` e as cores/fontes para `ui/tema.py`. Nenhum comportamento
-visível deveria mudar — é isso que `tests/test_characterization_painel.py`
-verifica.
+Layout em faixas (ver docs/PLANO-PAINEL-v1.md e o mock
+docs/screenshots/mock-painel-v1.png):
+
+    topo (título + pílula de status)
+    ┌ Configurações do Experimento ┐
+    ┌ Contagem ┐ ┌ Estado do sistema ┐
+    [ Iniciar Captura · F5 ] [ Sincronizar · F9 ] [ Sair · Ctrl+Q ]
+
+A lógica dos métodos é a mesma de antes; o que mudou é a montagem (agora
+via ui/widgets.py), a paleta (ui/tema.py) e:
+  - a "Última Foto" mostra a contagem CORRIGIDA + a bruta ("detecção IA");
+  - fila de análise e estado real do analisador ficam visíveis
+    (`fila_pendente` / `analisador_estado` do core/status.py);
+  - atalhos F5 / F9 / Ctrl+Q;
+  - telemetria não corta mais texto (sem largura fixa).
+
+A faixa "Parcela" do mock (X/Y/Linha, identificador X3Y7L2, botão
+"Próxima") depende de carregar a planilha da semeadora — entra no
+`feat/parcela` (RV-02 / RV-06), não aqui.
 
 Ver docs/MELHORIAS.md frentes #6 e #7.
 """
@@ -29,8 +43,9 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title(f"Estação de Controlo de Captura v{config.VERSAO} - Rover FAPA")
-        self.root.geometry("780x580")
-        self.root.configure(bg=tema.FUNDO)
+        self.root.geometry("880x600")
+        self.root.minsize(820, 560)
+        self.root.configure(bg=tema.BG)
 
         self.capturador_process = None
         self.analyzer_process = None
@@ -38,39 +53,87 @@ class App:
         self.photo_count = 0
 
         # Parcela sendo capturada agora. O TOTAL só é exibido quando o status
-        # gravado pelo analisador é desta mesma parcela (evita mostrar total
-        # antigo de uma parcela anterior).
+        # gravado pelo analisador é desta mesma parcela.
         self.setor_atual = ""
 
         self.status_file = config.ARQUIVO_STATUS
-
         self.fontes = tema.Fontes()
 
-        main_frame = tk.Frame(root, padx=20, pady=20, bg=tema.FUNDO)
-        main_frame.pack(expand=True, fill=tk.BOTH)
+        # --- topo ---
+        top, self.lbl_pill_dot, self.lbl_pill_texto = widgets.montar_topo(root, self.fontes)
+        top.pack(fill="x", padx=tema.PAD, pady=(16, 10))
 
-        input_frame, self.entry_tratamento, self.entry_linha = widgets.montar_configuracoes_experimento(
-            main_frame, self.fontes)
-        input_frame.pack(fill="x", expand=False, pady=(0, 15))
+        # --- configurações do experimento ---
+        cfg, self.entry_tratamento, self.entry_linha = widgets.montar_configuracoes_experimento(
+            root, self.fontes)
+        cfg.pack(fill="x", padx=tema.PAD, pady=(0, tema.GAP))
 
-        control_frame, self.btn_start_stop, self.btn_sync, self.btn_exit = widgets.montar_controles(
-            main_frame, self.fontes, self.toggle_capture, self.run_sync, self.exit_app)
-        control_frame.pack(fill="x", expand=False, pady=(0, 15))
+        # --- área principal: 2 colunas ---
+        mainarea = tk.Frame(root, bg=tema.BG)
+        mainarea.pack(fill="both", expand=True, padx=tema.PAD)
+        mainarea.columnconfigure(0, weight=1, uniform="m")
+        mainarea.columnconfigure(1, weight=1, uniform="m")
+        mainarea.rowconfigure(0, weight=1)
 
-        dashboard_frame = tk.Frame(main_frame, bg=tema.FUNDO)
-        dashboard_frame.pack(fill="both", expand=True)
+        cc, self.lbl_total_count, self.lbl_plant_count, self.lbl_bruto, self.lbl_fila = \
+            widgets.montar_contagem(mainarea, self.fontes)
+        cc.grid(row=0, column=0, sticky="nsew", padx=(0, tema.GAP // 2))
 
-        ia_frame, self.lbl_plant_count, self.lbl_total_count = widgets.montar_visao_computacional(
-            dashboard_frame, self.fontes)
-        ia_frame.pack(side="left", fill="both", expand=True, padx=(0, 10))
+        sc, est = widgets.montar_estado_sistema(mainarea, self.fontes)
+        sc.grid(row=0, column=1, sticky="nsew", padx=(tema.GAP // 2, 0))
+        self._est = est
+        self.lbl_current_operacao = est["val_parcela"]  # nome mantido p/ compatibilidade
+        self.lbl_photo_count = est["val_fotos"]
+        self.lbl_temp = est["lbl_temp"]
+        self.lbl_gpu = est["lbl_gpu"]
 
-        (telemetria_frame, self.lbl_current_operacao, self.lbl_photo_count,
-         self.lbl_temp, self.lbl_gpu) = widgets.montar_telemetria(dashboard_frame, self.fontes)
-        telemetria_frame.pack(side="right", fill="both", expand=True)
+        # --- ações ---
+        acts, self.btn_start_stop, self.btn_sync, self.btn_exit = widgets.montar_acoes(
+            root, self.fontes, self.toggle_capture, self.run_sync, self.exit_app)
+        acts.pack(fill="x", padx=tema.PAD, pady=(tema.GAP, 16))
+
+        # --- atalhos de teclado ---
+        self.root.bind("<F5>", lambda e: self.toggle_capture())
+        self.root.bind("<F9>", lambda e: self.run_sync())
+        self.root.bind("<Control-q>", lambda e: self.exit_app())
 
         self.start_analyzer()
         self.update_dashboard()
         self.root.protocol("WM_DELETE_WINDOW", self.exit_app)
+
+    # -----------------------------------------------------------------------
+    def _atualizar_pilula(self, st):
+        if self.is_running:
+            texto, cor = "capturando", tema.OK
+        elif st is None:
+            texto, cor = "aguardando analisador", tema.T3
+        elif st.analisador_estado == "erro":
+            texto, cor = "erro no analisador", tema.STOP
+        elif st.analisador_estado == "carregando":
+            texto, cor = "carregando modelo…", tema.WARN
+        elif st.analisador_estado == "analisando":
+            texto, cor = "analisando", tema.OK
+        else:
+            texto, cor = "sistema pronto", tema.OK
+        self.lbl_pill_dot.config(fg=cor)
+        self.lbl_pill_texto.config(text=" " + texto)
+
+    def _atualizar_estado_sistema(self, st):
+        if self.is_running:
+            self._est["dot_captura"].config(fg=tema.OK)
+            self._est["val_captura"].config(text="ativa", fg=tema.OK)
+        else:
+            self._est["dot_captura"].config(fg=tema.STOP)
+            self._est["val_captura"].config(text="parada", fg=tema.STOP)
+
+        if st is None:
+            self._est["dot_analisador"].config(fg=tema.T3)
+            self._est["val_analisador"].config(text="—", fg=tema.T3)
+        else:
+            texto, cor = tema.ESTADO_ANALISADOR.get(
+                st.analisador_estado, (st.analisador_estado, tema.T2))
+            self._est["dot_analisador"].config(fg=cor)
+            self._est["val_analisador"].config(text=texto, fg=cor)
 
     def update_dashboard(self):
         try:
@@ -79,27 +142,36 @@ class App:
             gpu_output = subprocess.check_output(['vcgencmd', 'get_mem', 'gpu']).decode()
             self.lbl_gpu.config(text=gpu_output.strip().replace("gpu=", ""))
         except FileNotFoundError:
-            self.lbl_temp.config(text="Não é um RPi")
-            self.lbl_gpu.config(text="Não é um RPi")
+            self.lbl_temp.config(text="n/d (não é um RPi)")
+            self.lbl_gpu.config(text="n/d")
         except Exception:
-            self.lbl_temp.config(text="Erro")
-            self.lbl_gpu.config(text="Erro")
+            self.lbl_temp.config(text="erro")
+            self.lbl_gpu.config(text="erro")
 
         # O analisador é a fonte da verdade — o painel só lê e exibe.
+        st = None
         try:
             st = status_mod.ler(self.status_file)
             if st is not None:
-                # "Plântulas na Última Foto" = contagem corrigida (não a bruta).
+                # última foto: contagem CORRIGIDA (não a bruta) + a bruta ao lado
                 self.lbl_plant_count.config(text=str(st.plantulas_corrigido))
-
-                # TOTAL ACUMULADO: vem pronto do analisador. Só exibe se for
-                # da parcela corrente; senão mantém o "0" do início da captura.
+                self.lbl_bruto.config(text=str(st.plantulas_bruto))
+                self.lbl_fila.config(
+                    text=f"{st.fila_pendente} a analisar" if st.fila_pendente else "vazia",
+                    fg=tema.WARN if st.fila_pendente else tema.T2,
+                )
+                # TOTAL: vem pronto do analisador. Só exibe se for da parcela
+                # corrente; senão mantém o "0" do início da captura.
                 if st.parcela and st.parcela == self.setor_atual:
                     self.lbl_total_count.config(text=str(st.total_parcela_corrigido))
                 elif not self.is_running:
                     self.lbl_total_count.config(text=str(st.total_parcela_corrigido))
         except Exception:
-            self.lbl_plant_count.config(text="Err")
+            self.lbl_plant_count.config(text="err")
+
+        self._atualizar_pilula(st)
+        self._atualizar_estado_sistema(st)
+        self.lbl_photo_count.config(text=str(self.photo_count))
 
         self.root.after(2000, self.update_dashboard)
 
@@ -124,10 +196,11 @@ class App:
         self.setor_atual = setor_nome
 
         self.update_gui_state()
-        self.lbl_current_operacao.config(text=setor_nome, fg=tema.VERDE)
+        self.lbl_current_operacao.config(text=setor_nome, fg=tema.ACC)
         self.lbl_photo_count.config(text="0")
         self.lbl_total_count.config(text="0")
         self.lbl_plant_count.config(text="--")
+        self.lbl_bruto.config(text="--")
 
         python_executable = sys.executable
         caminho_capturador = config.SCRIPT_CAPTURADOR
@@ -147,7 +220,7 @@ class App:
         if self.capturador_process: self.capturador_process.terminate()
         self.is_running = False
         self.update_gui_state()
-        self.lbl_current_operacao.config(text="Parado", fg=tema.VERMELHO)
+        self.lbl_current_operacao.config(text="—", fg=tema.T3)
 
     def listen_for_captures(self):
         if self.capturador_process and self.capturador_process.stdout:
@@ -167,16 +240,13 @@ class App:
 
         resposta = messagebox.askyesno("Sincronizar", "Conectado ao Wi-Fi?\nDeseja enviar as imagens novas e o CSV atualizado para o Google Drive agora?")
         if resposta:
-            # Roda a função em segundo plano
             threading.Thread(target=self._executar_sincronizacao_background, daemon=True).start()
 
     def _executar_sincronizacao_background(self):
-        # Desativa o botão temporariamente
-        self.root.after(0, lambda: self.btn_sync.config(text="⏳ SINCRONIZANDO...", state="disabled", bg=tema.CINZA_DESABILITADO))
+        self.root.after(0, lambda: self.btn_sync.config(text="⏳ Sincronizando…", state="disabled"))
 
         try:
             python_executable = sys.executable
-            # Chama o script que criamos na etapa anterior!
             caminho_script = config.SCRIPT_SINCRONIZAR
             subprocess.run([python_executable, caminho_script], check=True)
 
@@ -184,18 +254,17 @@ class App:
         except subprocess.CalledProcessError:
             self.root.after(0, lambda: messagebox.showerror("Erro de Rede", "Falha ao enviar os dados.\nVerifique se o script sincronizar_nuvem.py existe e se o Raspberry Pi está com internet."))
         finally:
-            # Libera o botão novamente
-            self.root.after(0, lambda: self.btn_sync.config(text="☁ SINCRONIZAR NUVEM", state="normal", bg=tema.AZUL))
+            self.root.after(0, lambda: self.btn_sync.config(text="☁ Sincronizar · F9", state="normal"))
 
     def update_gui_state(self):
         if self.is_running:
-            self.btn_start_stop.config(text="⏹ PARAR CAPTURA", bg=tema.VERMELHO)
-            self.btn_sync.config(state="disabled", bg=tema.CINZA_DESABILITADO)  # Desativa botão de nuvem durante a captura
+            self.btn_start_stop.config(text="⏹ Parar Captura · F5", bg=tema.BOTAO_STOP)
+            self.btn_sync.config(state="disabled")
             self.entry_tratamento.config(state="disabled")
             self.entry_linha.config(state="disabled")
         else:
-            self.btn_start_stop.config(text="▶ INICIAR CAPTURA", bg=tema.VERDE)
-            self.btn_sync.config(state="normal", bg=tema.AZUL)
+            self.btn_start_stop.config(text="▶ Iniciar Captura · F5", bg=tema.BOTAO_OK)
+            self.btn_sync.config(state="normal")
             self.entry_tratamento.config(state="normal")
             self.entry_linha.config(state="normal")
 
