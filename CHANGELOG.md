@@ -5,6 +5,35 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `refactor/status-schema` — schema único do status_analise.json
+
+**Adicionado**
+- `core/status.py` — dataclass `StatusAnalise` (schema versionado), leitura/
+  escrita **atômica** (`os.replace` + `fsync`) e rejeição de formato
+  incompatível (pré-schema v2.0 ou schema mais novo).
+- `core/__init__.py`.
+- `tests/test_status.py` — 10 casos: contrato do schema, escrita atômica,
+  regra de acumulado, retomada após reinício.
+
+**Corrigido**
+- **"TOTAL ACUMULADO" travava em 0.** O analisador gravava
+  `ultima_imagem_analisada`/`plantulas_detectadas_ia`; o painel procurava
+  `imagem_atual`/`total_plantulas_linha` (que nunca existiam). Agora o
+  **analisador mantém o acumulado por parcela** e o painel só lê e exibe.
+
+**Alterado**
+- `analisador_em_background.py`: acumula `total_parcela_bruto/corrigido` por
+  parcela (zera ao trocar de parcela), retoma o acumulado ao reiniciar,
+  reporta `analisador_estado` (`carregando`/`pronto`/`analisando`/`erro`) e
+  `fila_pendente`. O cabeçalho do CSV **não muda** (isso é RV-06).
+- `painel_controle.py`: "Plântulas na Última Foto" passa a mostrar a contagem
+  **corrigida**; o TOTAL vem pronto do status e só aparece se for da parcela
+  corrente. Removida a lógica de soma quebrada.
+
+**Comportamento:** muda de propósito (correção de bug). Ref.: Nygard
+*Release It!* (single source of truth); Candea & Fox (crash-only).
+`docs/MELHORIAS.md` frente #2.
+
 ### `refactor/config` — configuração central
 
 **Adicionado**

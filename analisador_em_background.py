@@ -7,11 +7,11 @@ import os
 import sys
 import csv
 from datetime import datetime
-import json
 import math
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import config
+from core import status as status_mod
 
 INTERVALO_VERIFICACAO = config.INTERVALO_VERIFICACAO_S
 MODELO_IA_PATH = config.MODELO_PATH
@@ -29,6 +29,39 @@ PASTA_ERROS = config.PASTA_ERROS
 config.garantir_pastas()
 ARQUIVO_CSV = config.ARQUIVO_CSV
 ARQUIVO_STATUS = config.ARQUIVO_STATUS
+
+# Estado acumulado — o analisador é a única fonte da verdade (ver core/status.py).
+# Fica em memória e é persistido a cada imagem; ao reiniciar, retoma o que estava
+# no status_analise.json (contanto que seja do schema atual).
+ESTADO = status_mod.StatusAnalise()
+
+
+def _contar_fila():
+    try:
+        return len([f for f in os.listdir(PASTA_PARA_ANALISAR) if f.endswith('.jpg')])
+    except OSError:
+        return 0
+
+
+def _publicar_estado(novo_estado=None):
+    """Atualiza a fila e (opcionalmente) o analisador_estado, e grava."""
+    if novo_estado is not None:
+        ESTADO.analisador_estado = novo_estado
+    ESTADO.fila_pendente = _contar_fila()
+    status_mod.escrever(ARQUIVO_STATUS, ESTADO)
+
+
+def _retomar_acumulado():
+    """Recarrega o acumulado da parcela em que o analisador parou."""
+    anterior = status_mod.ler(ARQUIVO_STATUS)
+    if anterior is not None:
+        ESTADO.parcela = anterior.parcela
+        ESTADO.total_parcela_bruto = anterior.total_parcela_bruto
+        ESTADO.total_parcela_corrigido = anterior.total_parcela_corrigido
+        if anterior.parcela:
+            print(f"ANALISADOR: Retomando parcela '{anterior.parcela}' "
+                  f"(acumulado: {anterior.total_parcela_corrigido} corrigido).")
+
 
 def inicializar_csv():
     """Verifica se o CSV existe e, se não, cria-o com o cabeçalho."""
@@ -72,18 +105,21 @@ def analisar_imagem(caminho_imagem, model):
         with open(ARQUIVO_CSV, mode='a', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow([datetime.now().strftime('%Y-%m-%d %H:%M:%S'), setor_imagem, timestamp_imagem, contagem_bruta, contagem_ajustada, nome_base])
-        
-        status_data = {
-            "ultima_imagem_analisada": nome_base,
-            "plantulas_detectadas_ia": contagem_bruta,
-            "plantulas_estimadas_reais": contagem_ajustada, # Novo campo com valor corrigido
-            "timestamp_analise": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-        with open(ARQUIVO_STATUS, 'w') as f_status:
-            json.dump(status_data, f_status)
+
+        # --- acumulado por parcela: o analisador é quem soma ---
+        if setor_imagem != ESTADO.parcela:
+            ESTADO.parcela = setor_imagem
+            ESTADO.total_parcela_bruto = 0
+            ESTADO.total_parcela_corrigido = 0
+        ESTADO.total_parcela_bruto += contagem_bruta
+        ESTADO.total_parcela_corrigido += contagem_ajustada
+        ESTADO.ultima_imagem = nome_base
+        ESTADO.plantulas_bruto = contagem_bruta
+        ESTADO.plantulas_corrigido = contagem_ajustada
+        _publicar_estado("analisando")
 
         print(f"ANALISADOR: Análise de '{nome_base}' -> {contagem_bruta} detectadas | {contagem_ajustada} estimadas.")
-        
+
         os.rename(caminho_imagem, os.path.join(PASTA_ANALISADAS, nome_base))
     except Exception as e:
         print(f"ANALISADOR: !!! ERRO CRÍTICO ao analisar {os.path.basename(caminho_imagem)}: {e}")
@@ -91,28 +127,38 @@ def analisar_imagem(caminho_imagem, model):
 
 if __name__ == "__main__":
     inicializar_csv()
+    _retomar_acumulado()
+    _publicar_estado("carregando")
     print("ANALISADOR: A carregar o modelo de IA. Por favor, aguarde...")
-    
+
     try:
         modelo_ia = torch.hub.load(YOLOV5_DIR, 'custom', path=MODELO_IA_PATH, source='local')
         modelo_ia.conf = CONFIANCA_IA
         modelo_ia.classes = CLASSE_IA
         print("ANALISADOR: Modelo carregado com sucesso. A iniciar monitorização da pasta.")
-        
+        _publicar_estado("pronto")
+
         while True:
             imagens_pendentes = sorted([f for f in os.listdir(PASTA_PARA_ANALISAR) if f.endswith('.jpg')])
-            
+
             if not imagens_pendentes:
+                if ESTADO.analisador_estado != "pronto" or ESTADO.fila_pendente != 0:
+                    _publicar_estado("pronto")
                 time.sleep(INTERVALO_VERIFICACAO)
                 continue # Volta para o início do loop
 
             print(f"ANALISADOR: {len(imagens_pendentes)} imagens encontradas. A processar...")
-            
+            _publicar_estado("analisando")
+
             for nome_imagem in imagens_pendentes:
                 caminho_completo = os.path.join(PASTA_PARA_ANALISAR, nome_imagem)
                 analisar_imagem(caminho_completo, modelo_ia)
-                
+
     except Exception as e:
+        try:
+            _publicar_estado("erro")
+        except Exception:
+            pass
         print("\n" + "="*60)
         print("!!! ERRO FATAL NO ANALISADOR !!!")
         print(f"O processo de análise não pôde ser iniciado. Causa: {e}")
@@ -120,6 +166,6 @@ if __name__ == "__main__":
         print("e se todas as dependências do ambiente virtual (venv) estão instaladas.")
         print("="*60)
         time.sleep(30)
-        
+
     finally:
         print("ANALISADOR: Encerrado.")
