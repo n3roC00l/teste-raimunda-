@@ -5,6 +5,33 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `feat/export-csv` — CSV canônico + export para a planilha (RV-06)
+
+**Adicionado**
+- `core/registro.py` — CSV **tidy** (`log_analise_total.csv`): uma variável
+  por coluna — `experimento, parcela, X, Y, linha, timestamp_imagem,
+  timestamp_analise, plantulas_bruto, plantulas_corrigido, incerteza,
+  nome_imagem, sha256_imagem, versao_modelo, versao_software`. `incerteza`
+  reservado para RV-08. `garantir_csv()` **arquiva** um CSV de formato antigo
+  (`*.legado-<ts>.csv`) e começa limpo.
+- `core/export.py` — soma `plantulas_corrigido` por (X, Y, linha) e preenche
+  as colunas `linha 1/2/3` da planilha da semeadora. Saída `.xlsx` (preserva
+  abas/estrutura via openpyxl) ou `.csv`.
+- `exportar_planilha.py` — CLI para rodar no fim da campanha.
+- Painel: **Ctrl+E** exporta (mostra quantos plots preencheu e onde salvou).
+- `tests/test_registro.py` (6), `tests/test_export.py` (6).
+- `config.VERSAO_MODELO` (basename dos pesos, gravado em cada linha).
+
+**Alterado**
+- `analisador_em_background.py` grava pelo `core/registro.py` — com
+  `experimento` (lido de `parcela_atual.json`), X/Y/linha decompostos do
+  identificador, `sha256` da imagem e versões. O CSV antigo (11 formatos,
+  97 linhas vazias — era teste) é arquivado no primeiro arranque.
+
+**Comportamento:** o CSV muda de formato (de propósito — RV-06). Análise,
+acumulados e status seguem iguais. Suite: 95 casos. `docs/MELHORIAS.md`
+frentes #2 e #5; RV-06.
+
 ### `feat/persistencia` + `feat/systemd` — robustez de campo (frente #3)
 
 **Adicionado**

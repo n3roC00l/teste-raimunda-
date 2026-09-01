@@ -76,6 +76,8 @@ MODELO_PATH = os.environ.get(
     "ROVER_MODELO_PATH",
     os.path.join(YOLOV5_DIR, "best_soja_final_97_5.pt"),
 )
+# Identifica os pesos usados, gravado em cada linha do CSV (rastreabilidade).
+VERSAO_MODELO = os.environ.get("ROVER_VERSAO_MODELO", os.path.basename(MODELO_PATH))
 
 # --------------------------------------------------------------------------
 # Parâmetros da captura (capturador.py)

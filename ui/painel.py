@@ -20,6 +20,7 @@ Ver docs/MELHORIAS.md frentes #5 e #6.
 
 import tkinter as tk
 from tkinter import messagebox, simpledialog
+from datetime import datetime
 import shutil
 import subprocess
 import os
@@ -32,6 +33,7 @@ from core import status as status_mod
 from core import parcela as parcela_mod
 from core import eventos
 from core import watchdog
+from core import export as export_mod
 
 from . import tema
 from . import widgets
@@ -98,6 +100,7 @@ class App:
         self.root.bind("<F5>", lambda e: self.toggle_capture())
         self.root.bind("<F9>", lambda e: self.run_sync())
         self.root.bind("<F2>", lambda e: self.parcela_proxima())
+        self.root.bind("<Control-e>", lambda e: self.exportar_planilha())
         self.root.bind("<Control-q>", lambda e: self.exit_app())
 
         self._atualizar_parcela_ui()
@@ -328,6 +331,26 @@ class App:
                 "Erro de Rede", "Falha ao enviar os dados.\nVerifique a internet do Raspberry Pi."))
         finally:
             self.root.after(0, lambda: self.btn_sync.config(text="☁ Sincronizar · F9", state="normal"))
+
+    # =======================================================================
+    # exportar planilha (Ctrl+E)
+    # =======================================================================
+    def exportar_planilha(self):
+        if self.is_running:
+            messagebox.showwarning("Atenção", "Pare a captura antes de exportar a planilha.")
+            return
+        ext = os.path.splitext(config.PLANILHA_PROGRAMACAO)[1].lower() or ".xlsx"
+        saida = os.path.join(config.BASE_DIR, f"export_{datetime.now():%Y%m%d-%H%M}{ext}")
+        try:
+            caminho, n = export_mod.exportar(
+                saida, caminho_planilha=config.PLANILHA_PROGRAMACAO,
+                experimento=self.nav.experimento)
+        except (FileNotFoundError, ValueError) as e:
+            messagebox.showerror("Exportar", f"Não foi possível exportar:\n{e}")
+            return
+        eventos.registrar("planilha_exportada", saida=os.path.basename(caminho), plots=n)
+        messagebox.showinfo("Exportar",
+                            f"{n} plot(s) preenchido(s).\nSalvo em:\n{caminho}")
 
     # =======================================================================
     def update_gui_state(self):

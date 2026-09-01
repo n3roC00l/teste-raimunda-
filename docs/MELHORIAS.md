@@ -223,17 +223,18 @@ irrecuperável.
 
 ## Priorização (mapeada ao backlog e aos PRs)
 
-| Ordem | Frente | RV | PR | Muda comportamento? |
+| Ordem | Frente | RV | PR | Status |
 |---|---|---|---|---|
-| 1 | Config única (#1) | RV-04 | `refactor/config` | não |
-| 2 | Schema de dados (#2) | RV-06 | `refactor/status-schema` | sim — corrige o TOTAL |
-| 3 | Testes de caracterização (#7) | — | (antes do #4) | não |
-| 4 | Split de UI (#6, base) | RV-01 | `refactor/ui-split` | não |
-| 5 | Layout novo + estado do analisador (#6) | RV-01 | `feat/ui-v1`, `feat/estado-analisador` | sim — visual |
-| 6 | Robustez de campo / retomada (#3) ✅ | RV-07 | `feat/persistencia`, `feat/systemd` | sim |
-| 7 | Navegação de parcela + carga da planilha (#5) | RV-02 | `feat/parcela` | sim |
-| 8 | Protocolo de validação da contagem (#4) | **RV-08** | doc + `feat/calibracao` | sim |
-| 9 | Versionamento / rastreabilidade (#8) | transversal | contínuo | não |
+| 1 | Config única (#1) | RV-04 | `refactor/config` | ✅ |
+| 2 | Schema de dados — status (#2) | RV-06 | `refactor/status-schema` | ✅ (TOTAL corrigido) |
+| 3 | Testes de caracterização (#7) | — | `test/caracterizacao` | ✅ |
+| 4 | Split de UI (#6, base) | RV-01 | `refactor/ui-split` | ✅ |
+| 5 | Layout novo + estado do analisador (#6) | RV-01 | `feat/ui-v1` (+ `estado-analisador` absorvido) | ✅ |
+| 6 | Robustez de campo / retomada (#3) | RV-07 | `feat/persistencia`, `feat/systemd` | ✅ |
+| 7 | Navegação de parcela + carga da planilha (#5) | RV-02 | `feat/parcela` | ✅ |
+| 8 | CSV canônico *tidy* + export p/ planilha (#2/#5) | RV-06 | `feat/export-csv` | ✅ |
+| 9 | Protocolo de validação da contagem (#4) | **RV-08** | doc + `feat/calibracao` | ⬜ depende de campo |
+| 10 | Versionamento / rastreabilidade (#8) | transversal | contínuo | 🟡 SemVer + CHANGELOG + sha256/versão por linha ✅ |
 
 O #4 é o que garante o "êxito" no sentido que importa para pesquisa, mas depende do #2
 estar pronto (precisa das colunas de rastreio) e de uma ida a campo com contagem manual

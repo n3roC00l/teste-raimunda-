@@ -5,14 +5,15 @@ import cv2
 import time
 import os
 import sys
-import csv
-from datetime import datetime
+import json
 import math
+from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import config
 from core import status as status_mod
 from core import parcela as parcela_mod
+from core import registro
 from core import eventos
 from core import watchdog
 
@@ -73,12 +74,20 @@ def _retomar_acumulado():
 
 
 def inicializar_csv():
-    """Verifica se o CSV existe e, se não, cria-o com o cabeçalho."""
-    if not os.path.exists(ARQUIVO_CSV):
-        with open(ARQUIVO_CSV, mode='w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow(['timestamp_analise', 'setor_imagem', 'timestamp_imagem', 'plantulas_detectadas_ia', 'plantulas_ajustadas', 'nome_imagem'])
-        print(f"ANALISADOR: Ficheiro de log criado em: {ARQUIVO_CSV}")
+    """Garante o CSV canônico (ver core/registro.py). Arquiva formato antigo."""
+    arquivado = registro.garantir_csv(ARQUIVO_CSV)
+    if arquivado:
+        print(f"ANALISADOR: CSV de formato antigo arquivado em: {arquivado}")
+        eventos.registrar("csv_legado_arquivado", arquivo=os.path.basename(arquivado))
+
+
+def _experimento_atual():
+    """Lê o nome do experimento de parcela_atual.json (o painel grava)."""
+    try:
+        with open(config.ARQUIVO_PARCELA, encoding="utf-8") as f:
+            return (json.load(f).get("experimento") or "").strip()
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return ""
 
 def calcular_contagem_ajustada(contagem_bruta):
     """Aplica a correção estatística à contagem bruta da IA."""
@@ -111,9 +120,26 @@ def analisar_imagem(caminho_imagem, model):
         setor_imagem = "_".join(partes_nome[:-2])
         timestamp_imagem = f"{partes_nome[-2]} {partes_nome[-1].replace('-', ':', 2).replace('-', '.')}"
 
-        with open(ARQUIVO_CSV, mode='a', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow([datetime.now().strftime('%Y-%m-%d %H:%M:%S'), setor_imagem, timestamp_imagem, contagem_bruta, contagem_ajustada, nome_base])
+        # --- progresso do plot: acumulado por linha (X3Y7L2 -> plot X3Y7, linha 2) ---
+        parsed = parcela_mod.parse_identificador(setor_imagem)
+        x = y = linha = ""
+        if parsed:
+            x, y, linha = parsed
+
+        registro.registrar_analise(
+            ARQUIVO_CSV,
+            experimento=_experimento_atual(),
+            parcela=setor_imagem,
+            X=x, Y=y, linha=linha,
+            timestamp_imagem=timestamp_imagem,
+            timestamp_analise=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            plantulas_bruto=contagem_bruta,
+            plantulas_corrigido=contagem_ajustada,
+            nome_imagem=nome_base,
+            sha256_imagem=registro.sha256_arquivo(caminho_imagem),
+            versao_modelo=config.VERSAO_MODELO,
+            versao_software=config.VERSAO,
+        )
 
         # --- acumulado por parcela (= linha): o analisador é quem soma ---
         if setor_imagem != ESTADO.parcela:
@@ -124,10 +150,7 @@ def analisar_imagem(caminho_imagem, model):
         ESTADO.total_parcela_bruto += contagem_bruta
         ESTADO.total_parcela_corrigido += contagem_ajustada
 
-        # --- progresso do plot: acumulado por linha (X3Y7L2 -> plot X3Y7, linha 2) ---
-        parsed = parcela_mod.parse_identificador(setor_imagem)
         if parsed:
-            x, y, linha = parsed
             plot = parcela_mod.plot_id(x, y)
             if plot != ESTADO.plot:
                 ESTADO.plot = plot

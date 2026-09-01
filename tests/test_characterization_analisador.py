@@ -107,52 +107,79 @@ def _preparar_pastas(tmp_path, monkeypatch):
     monkeypatch.setattr(an, "ARQUIVO_STATUS", str(status_path))
     monkeypatch.setattr(an, "ESTADO", status_mod.StatusAnalise())
     monkeypatch.setattr(config, "ARQUIVO_EVENTOS", str(logs / "eventos.jsonl"))
+    monkeypatch.setattr(config, "ARQUIVO_PARCELA", str(logs / "parcela.json"))
     an.inicializar_csv()
     return pendentes, ok, erro, csv_path, status_path
 
 
-def test_cabecalho_do_csv_pinado(tmp_path, monkeypatch):
+def _linhas_csv(csv_path):
+    import csv
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def test_cabecalho_do_csv_canonico(tmp_path, monkeypatch):
+    from core import registro
     _, _, _, csv_path, _ = _preparar_pastas(tmp_path, monkeypatch)
-    cabecalho = csv_path.read_text(encoding="utf-8").splitlines()[0]
-    assert cabecalho == (
-        "timestamp_analise,setor_imagem,timestamp_imagem,"
-        "plantulas_detectadas_ia,plantulas_ajustadas,nome_imagem"
-    )
+    cabecalho = csv_path.read_text(encoding="utf-8").splitlines()[0].split(",")
+    assert cabecalho == registro.CABECALHO
 
 
-def test_analisar_imagem_grava_csv_status_e_move_arquivo(tmp_path, monkeypatch):
+def test_csv_de_formato_antigo_e_arquivado(tmp_path, monkeypatch):
+    import csv
+    logs = tmp_path / "l"; logs.mkdir()
+    csv_path = logs / "log.csv"
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        csv.writer(f).writerow(["timestamp_analise", "setor_imagem", "x"])
+        csv.writer(f).writerow(["2026", "lote_1", "5"])
+    monkeypatch.setattr(an, "ARQUIVO_CSV", str(csv_path))
+    monkeypatch.setattr(config, "ARQUIVO_EVENTOS", str(logs / "e.jsonl"))
+
+    an.inicializar_csv()
+
+    legados = list(logs.glob("log.legado-*.csv"))
+    assert len(legados) == 1
+    assert "lote_1" in legados[0].read_text()          # o velho foi preservado
+    from core import registro
+    assert csv_path.read_text().splitlines()[0].split(",") == registro.CABECALHO
+
+
+def test_analisar_imagem_grava_csv_canonico_e_move_arquivo(tmp_path, monkeypatch):
     pendentes, ok, erro, csv_path, status_path = _preparar_pastas(tmp_path, monkeypatch)
 
-    nome = "trat_A_linha_1_2026-02-03_13-47-51-019834.jpg"
+    nome = "X3Y7L1_2026-02-03_13-47-51-019834.jpg"
     caminho = pendentes / nome
     caminho.write_bytes(b"fake-jpg")
 
     an.analisar_imagem(str(caminho), FakeModel([10]))
 
-    # imagem movida para "analisadas", não sobra em "pendentes" nem "erro"
     assert not caminho.exists()
     assert (ok / nome).exists()
     assert not list(erro.iterdir())
 
-    # CSV: 1 linha de dado, na ordem atual (setor/timestamp parseados do nome)
-    linhas = csv_path.read_text(encoding="utf-8").splitlines()
-    assert len(linhas) == 2
-    campos = linhas[1].split(",")
-    assert campos[1] == "trat_A_linha_1"                 # setor_imagem
-    assert campos[2] == "2026-02-03 13:47:51.019834"      # timestamp_imagem reconstruído
-    assert campos[3] == "10"                              # bruta
-    assert campos[4] == "11"                              # ajustada (golden: 10 -> 11)
-    assert campos[5] == nome
+    linhas = _linhas_csv(csv_path)
+    assert len(linhas) == 1
+    d = linhas[0]
+    assert d["parcela"] == "X3Y7L1"
+    assert d["X"] == "3" and d["Y"] == "7" and d["linha"] == "1"
+    assert d["timestamp_imagem"] == "2026-02-03 13:47:51.019834"
+    assert d["plantulas_bruto"] == "10"
+    assert d["plantulas_corrigido"] == "11"               # golden 10 -> 11
+    assert d["nome_imagem"] == nome
+    assert len(d["sha256_imagem"]) == 64
+    assert d["versao_software"] == config.VERSAO
+    assert d["versao_modelo"]
 
     # status_analise.json: schema novo, acumulado da parcela
     st = status_mod.ler(str(status_path))
     assert st is not None
-    assert st.parcela == "trat_A_linha_1"
+    assert st.parcela == "X3Y7L1"
     assert st.ultima_imagem == nome
     assert st.plantulas_bruto == 10
     assert st.plantulas_corrigido == 11
     assert st.total_parcela_bruto == 10
     assert st.total_parcela_corrigido == 11
+    assert st.plot == "X3Y7" and st.linha == 1
     assert st.analisador_estado == "analisando"
 
 

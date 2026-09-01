@@ -95,7 +95,24 @@ def test_atalhos_de_teclado_ligados(app):
     assert app.root.bind("<F5>")
     assert app.root.bind("<F9>")
     assert app.root.bind("<F2>")
+    assert app.root.bind("<Control-e>")
     assert app.root.bind("<Control-q>")
+
+
+def test_exportar_planilha_sem_planilha_avisa(app, monkeypatch):
+    erros = []
+    monkeypatch.setattr(pc.messagebox, "showerror", lambda *a, **k: erros.append(a))
+    monkeypatch.setattr(pc.config, "ARQUIVO_CSV", str(pc.config.ARQUIVO_STATUS) + ".csv")
+    app.exportar_planilha()   # PLANILHA_PROGRAMACAO aponta p/ arquivo inexistente
+    assert erros
+
+
+def test_exportar_planilha_bloqueado_durante_captura(app, monkeypatch):
+    avisos = []
+    monkeypatch.setattr(pc.messagebox, "showwarning", lambda *a, **k: avisos.append(a))
+    app.start_capture()
+    app.exportar_planilha()
+    assert avisos
 
 
 def test_analisador_e_disparado_na_abertura(app):

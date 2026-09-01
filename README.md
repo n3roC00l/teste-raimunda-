@@ -39,6 +39,8 @@ flowchart LR
 | `core/parcela.py` | Modelo da parcela (`X3Y7L2`) + navegador da campanha (segue a planilha da semeadora ou incremento aritmético). |
 | `core/eventos.py` | Log de eventos append-only (`logs_analise/eventos.jsonl`). |
 | `core/watchdog.py` | sd_notify opcional (watchdog do systemd); no-op fora do systemd. |
+| `core/registro.py` | CSV canônico de análise (colunas *tidy*, uma variável por coluna). |
+| `core/export.py` · `exportar_planilha.py` | Preenche as colunas `linha 1/2/3` da planilha da semeadora com a contagem corrigida. |
 | `deploy/` | `rover.service` + `install.sh` — sobe no boot e reinicia se cair (ver `deploy/README.md`). |
 | `sincronizar_nuvem.py` | `rclone copy` das imagens e do CSV para o remote configurado. |
 | `iniciar_aplicacao.sh` | Arranque: ativa o `venv` e roda o painel. |
@@ -134,6 +136,19 @@ Aberto com o Leandro: formato exato do identificador (zero à esquerda? separado
 ordem das 3 linhas. Ver `docs/ANALISE-E-MAPA.md` e a nota `Planilha da semeadora`
 no vault.
 
+### Exportar o resultado
+
+No fim da campanha, gera uma cópia da planilha com as colunas
+`linha 1 / linha 2 / linha 3` preenchidas com a **contagem corrigida** somada
+por linha:
+
+```bash
+python exportar_planilha.py --experimento "Antecipado Pinhão 2025"
+```
+
+Ou, no painel, **Ctrl+E**. Saída: `export_<data>.xlsx` (preserva as abas da
+planilha) — ou `.csv` se a planilha de entrada for `.csv`.
+
 ## Bugs conhecidos (não corrigidos neste marco zero)
 
 1. **"TOTAL ACUMULADO" fica sempre em 0.** O `analisador_em_background.py` grava
@@ -145,6 +160,8 @@ no vault.
 3. **Colunas do CSV divergem entre versões** — o código escreve
    `plantulas_detectadas_ia` / `plantulas_ajustadas`; o CSV de campo tem
    `plantulas_corrigidas` / `plantulas_detectadas`.
+   → resolvido em `feat/export-csv`: cabeçalho canônico *tidy* (`core/registro.py`),
+   CSV antigo arquivado no primeiro arranque.
 4. **Nomenclatura de parcelas inconsistente** — o CSV real tem 11 padrões diferentes de
    `setor_imagem` + 97 linhas vazias. O código gera `trat_{Tratamento}_linha_{Linha}`,
    mas os dados mostram `lote_XX_var_YY` e variações. Ver `docs/ANALISE-E-MAPA.md`.
