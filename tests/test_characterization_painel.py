@@ -1,7 +1,12 @@
 """
-Caracterização de painel_controle.py (GUI Tkinter) — trava o comportamento
-ATUAL antes do `refactor/ui-split` (que promete "layout igual"). Se este
-arquivo ainda passar depois do split, a promessa foi cumprida.
+Caracterização da GUI do painel (Tkinter) — trava o comportamento ATUAL.
+Escrito antes do `refactor/ui-split` (que prometia "layout igual") contra
+`painel_controle.App`; agora exercita `ui.painel.App`, o novo lugar da
+classe — o split moveu o código de `App.__init__` para `ui/widgets.py` e
+`ui/tema.py`, sem trocar nenhuma classe Tk, cor ou texto. Este arquivo
+passar sem alteração de asserts é a prova de que a promessa foi cumprida.
+`painel_controle.py` virou um shim (`from ui.painel import App, main`) só
+para o `iniciar_aplicacao.sh` continuar funcionando.
 
 Roda com uma App Tkinter de verdade (fixture `tk_root`, ver conftest.py),
 não com um simulacro — só `subprocess.Popen` e as caixas de diálogo modais
@@ -19,7 +24,7 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import painel_controle as pc
+from ui import painel as pc
 from core import status as status_mod
 
 

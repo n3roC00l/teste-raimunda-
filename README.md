@@ -29,10 +29,14 @@ flowchart LR
 
 | Arquivo | Papel |
 |---|---|
-| `painel_controle.py` | GUI Tkinter "Estação de Controlo de Captura v2.5". Processo mãe. |
+| `painel_controle.py` | Shim de compatibilidade — `from ui.painel import App, main` (`refactor/ui-split`). Processo mãe. |
+| `ui/painel.py` | A classe `App` (GUI Tkinter "Estação de Controlo de Captura"). |
+| `ui/widgets.py` | Construção de cada bloco da tela (Configurações, Controles, Visão Computacional, Telemetria). |
+| `ui/tema.py` | Cores e fontes do painel. |
 | `capturador.py` | Captura contínua pela câmera (`picamera2`), 1 foto a cada 0,90 s, 1280×720. |
 | `analisador_em_background.py` | Vigia a pasta, roda YOLOv5, aplica correção estatística, grava CSV/JSON. |
-| `sincronizar_nuvem.py` | `rclone copy` das imagens e do CSV para `gdrive:Rover_FAPA_Backups`. |
+| `core/status.py` | Schema único do `status_analise.json` (leitura/escrita atômica). |
+| `sincronizar_nuvem.py` | `rclone copy` das imagens e do CSV para o remote configurado. |
 | `iniciar_aplicacao.sh` | Arranque: ativa o `venv` e roda o painel. |
 | `detector_backend.py` | Classe `YoloDetector` usada pelas GUIs de teste. |
 | `app_final.py`, `app_gui.py` | GUIs de análise de 1 imagem (fora do fluxo do rover). |
