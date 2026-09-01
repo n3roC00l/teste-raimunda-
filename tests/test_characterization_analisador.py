@@ -26,6 +26,7 @@ for _nome in ("torch", "cv2"):
     except ImportError:
         sys.modules[_nome] = types.ModuleType(_nome)
 
+import config
 import analisador_em_background as an
 from core import status as status_mod
 
@@ -105,6 +106,7 @@ def _preparar_pastas(tmp_path, monkeypatch):
     monkeypatch.setattr(an, "ARQUIVO_CSV", str(csv_path))
     monkeypatch.setattr(an, "ARQUIVO_STATUS", str(status_path))
     monkeypatch.setattr(an, "ESTADO", status_mod.StatusAnalise())
+    monkeypatch.setattr(config, "ARQUIVO_EVENTOS", str(logs / "eventos.jsonl"))
     an.inicializar_csv()
     return pendentes, ok, erro, csv_path, status_path
 

@@ -13,8 +13,17 @@ import os
 import subprocess
 import sys
 
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config
 import sincronizar_nuvem as sin
+
+
+@pytest.fixture(autouse=True)
+def _eventos_isolados(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "ARQUIVO_EVENTOS", str(tmp_path / "eventos.jsonl"))
+    monkeypatch.setattr(config, "ARQUIVO_ULTIMA_SYNC", str(tmp_path / "ultima_sync.txt"))
 
 
 class ChamadasRegistradas:

@@ -109,6 +109,9 @@ NUVEM_DESTINO_IMAGENS = f"{RCLONE_REMOTE}:{NUVEM_BASE}/imagens_analisadas"
 NUVEM_DESTINO_CSV     = f"{RCLONE_REMOTE}:{NUVEM_BASE}/relatorios"
 ARQUIVO_ULTIMA_SYNC = os.path.join(PASTA_LOGS, "ultima_sync.txt")
 
+# Log de eventos append-only (JSONL) — ver core/eventos.py.
+ARQUIVO_EVENTOS = os.path.join(PASTA_LOGS, "eventos.jsonl")
+
 # --------------------------------------------------------------------------
 # Parcela / nomenclatura  (ver RV-02, RV-06, core/parcela.py)
 # --------------------------------------------------------------------------

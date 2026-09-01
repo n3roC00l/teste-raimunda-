@@ -5,6 +5,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import config
+from core import eventos
 
 # ==========================================
 # CAMINHOS LOCAIS (ver config.py — derivados de BASE_DIR)
@@ -54,12 +55,14 @@ def sincronizar():
         except OSError:
             pass
 
+        eventos.registrar("sync_ok")
         print(f"\n[{datetime.datetime.now().strftime('%H:%M:%S')}] ✅ Sincronização 100% concluída!")
 
     except subprocess.CalledProcessError as e:
+        eventos.registrar("sync_erro", erro=str(e))
         print(f"\n❌ Erro ao sincronizar. Detalhes: {e}")
         # Retorna código de erro para o painel Tkinter saber que falhou
-        sys.exit(1) 
+        sys.exit(1)
 
 if __name__ == "__main__":
     sincronizar()

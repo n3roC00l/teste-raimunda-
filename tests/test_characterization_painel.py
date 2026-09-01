@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ui import painel as pc
 from ui import tema
 from core import status as status_mod
+from core import eventos
 
 
 class FakePopen:
@@ -60,6 +61,7 @@ def app(tk_root, tmp_path, monkeypatch):
     monkeypatch.setattr(pc.config, "ARQUIVO_STATUS", str(tmp_path / "status.json"))
     monkeypatch.setattr(pc.config, "ARQUIVO_PARCELA", str(tmp_path / "parcela.json"))
     monkeypatch.setattr(pc.config, "ARQUIVO_ULTIMA_SYNC", str(tmp_path / "sync.txt"))
+    monkeypatch.setattr(pc.config, "ARQUIVO_EVENTOS", str(tmp_path / "eventos.jsonl"))
     monkeypatch.setattr(pc.config, "PLANILHA_PROGRAMACAO", str(tmp_path / "sem_planilha.csv"))
     a = pc.App(tk_root)
     yield a
@@ -157,6 +159,17 @@ def test_stop_capture_reverte_o_estado(app):
     assert app.btn_start_stop.cget("text") == "▶ Iniciar Captura · F5"
     assert str(app._am["btn_prox"].cget("state")) == "normal"
     assert capturador.terminated is True
+
+
+def test_eventos_de_captura_sao_registrados(app):
+    app.parcela_proxima()          # X1Y1L2
+    app.start_capture()
+    app.stop_capture()
+    tipos = [e["evento"] for e in eventos.ler(pc.config.ARQUIVO_EVENTOS)]
+    assert "painel_iniciado" in tipos
+    assert "parcela_avancada" in tipos
+    assert "captura_iniciada" in tipos
+    assert "captura_parada" in tipos
 
 
 # ---------------------------------------------------------------------------

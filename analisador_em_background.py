@@ -13,6 +13,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import config
 from core import status as status_mod
 from core import parcela as parcela_mod
+from core import eventos
+from core import watchdog
 
 INTERVALO_VERIFICACAO = config.INTERVALO_VERIFICACAO_S
 MODELO_IA_PATH = config.MODELO_PATH
@@ -50,6 +52,7 @@ def _publicar_estado(novo_estado=None):
         ESTADO.analisador_estado = novo_estado
     ESTADO.fila_pendente = _contar_fila()
     status_mod.escrever(ARQUIVO_STATUS, ESTADO)
+    watchdog.batida()  # 'vivo' também durante lotes longos de análise
 
 
 def _retomar_acumulado():
@@ -114,6 +117,7 @@ def analisar_imagem(caminho_imagem, model):
 
         # --- acumulado por parcela (= linha): o analisador é quem soma ---
         if setor_imagem != ESTADO.parcela:
+            eventos.registrar("parcela_detectada", parcela=setor_imagem)
             ESTADO.parcela = setor_imagem
             ESTADO.total_parcela_bruto = 0
             ESTADO.total_parcela_corrigido = 0
@@ -146,12 +150,14 @@ def analisar_imagem(caminho_imagem, model):
         os.rename(caminho_imagem, os.path.join(PASTA_ANALISADAS, nome_base))
     except Exception as e:
         print(f"ANALISADOR: !!! ERRO CRÍTICO ao analisar {os.path.basename(caminho_imagem)}: {e}")
+        eventos.registrar("imagem_erro", imagem=os.path.basename(caminho_imagem), erro=str(e))
         os.rename(caminho_imagem, os.path.join(PASTA_ERROS, os.path.basename(caminho_imagem)))
 
 if __name__ == "__main__":
     inicializar_csv()
     _retomar_acumulado()
     _publicar_estado("carregando")
+    eventos.registrar("analisador_iniciado")
     print("ANALISADOR: A carregar o modelo de IA. Por favor, aguarde...")
 
     try:
@@ -160,8 +166,11 @@ if __name__ == "__main__":
         modelo_ia.classes = CLASSE_IA
         print("ANALISADOR: Modelo carregado com sucesso. A iniciar monitorização da pasta.")
         _publicar_estado("pronto")
+        eventos.registrar("analisador_pronto")
+        watchdog.pronto()
 
         while True:
+            watchdog.batida()
             imagens_pendentes = sorted([f for f in os.listdir(PASTA_PARA_ANALISAR) if f.endswith('.jpg')])
 
             if not imagens_pendentes:
@@ -180,6 +189,7 @@ if __name__ == "__main__":
     except Exception as e:
         try:
             _publicar_estado("erro")
+            eventos.registrar("analisador_erro", erro=str(e))
         except Exception:
             pass
         print("\n" + "="*60)

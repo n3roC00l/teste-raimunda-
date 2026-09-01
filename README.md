@@ -37,6 +37,9 @@ flowchart LR
 | `analisador_em_background.py` | Vigia a pasta, roda YOLOv5, aplica correção estatística, grava CSV/JSON. |
 | `core/status.py` | Schema único do `status_analise.json` (leitura/escrita atômica). |
 | `core/parcela.py` | Modelo da parcela (`X3Y7L2`) + navegador da campanha (segue a planilha da semeadora ou incremento aritmético). |
+| `core/eventos.py` | Log de eventos append-only (`logs_analise/eventos.jsonl`). |
+| `core/watchdog.py` | sd_notify opcional (watchdog do systemd); no-op fora do systemd. |
+| `deploy/` | `rover.service` + `install.sh` — sobe no boot e reinicia se cair (ver `deploy/README.md`). |
 | `sincronizar_nuvem.py` | `rclone copy` das imagens e do CSV para o remote configurado. |
 | `iniciar_aplicacao.sh` | Arranque: ativa o `venv` e roda o painel. |
 | `detector_backend.py` | Classe `YoloDetector` usada pelas GUIs de teste. |
@@ -150,6 +153,16 @@ no vault.
 5. **`sincronizar_nuvem.py` com caminhos absolutos fixos** (`/home/operador/Desktop/...`)
    e remote `gdrive` hard-coded. → resolvido em `refactor/config` (`config.py`).
 6. **Telemetria do painel corta texto longo** (layout de largura fixa).
+   → resolvido em `feat/ui-v1`.
+
+## No boot / reinício automático
+
+Ver [`deploy/README.md`](deploy/README.md): `rover.service` (systemd de
+usuário) sobe o painel no boot, reinicia em 5 s se cair e usa watchdog
+(mata + reinicia se travar 120 s). O estado da campanha
+(`status_analise.json`, `parcela_atual.json`) é persistido com escrita
+atômica — retoma onde parou. `logs_analise/eventos.jsonl` guarda a trilha do
+que aconteceu (auditoria).
 
 ## Roadmap (backlog de manutenção — RV)
 
