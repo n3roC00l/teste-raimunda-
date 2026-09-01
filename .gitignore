@@ -21,6 +21,7 @@ imagens_analisadas-*/
 fotos_teste/
 logs_analise/*.csv
 logs_analise/*.json
+logs_analise/*.txt
 labels_yolo/
 
 # --- Datasets de treino ---
@@ -38,6 +39,10 @@ rclone.conf
 
 # --- Override de config por máquina (ver config_local.example.py) ---
 config_local.py
+
+# --- Planilha de programação da semeadora (o operador dropa a dele) ---
+programacao_semeadora.csv
+programacao_semeadora.xlsx
 
 # --- SO / editores ---
 .DS_Store

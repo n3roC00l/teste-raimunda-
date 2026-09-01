@@ -69,16 +69,16 @@ class StatusAnalise:
 
 ## Camada 1 — layout novo
 
-### Implementado (`feat/ui-v1`)
+### Implementado (`feat/ui-v1` + `feat/parcela`)
 
 ![](screenshots/painel-v1-real.png)
 
-> A tela real (dados de exemplo via `status_analise.json`). O mock original
-> abaixo tinha a faixa "Parcela" (X/Y/Linha, `X3Y7L2`, "Próxima") e o card
-> "Progresso da parcela" — isso depende de carregar a planilha da semeadora e
-> ficou para o `feat/parcela` (RV-02/RV-06). O `feat/ui-v1` entregou: tema por
-> tokens, faixas, pílula de status, fila visível, estado real do analisador,
-> atalhos F5/F9/Ctrl+Q, telemetria sem corte.
+> A tela real, em modo campanha (planilha `Plan1` carregada). `feat/ui-v1`:
+> tema por tokens, faixas, pílula de status, fila visível, estado real do
+> analisador, atalhos. `feat/parcela`: faixa Experimento (+ editar) / Parcela
+> (X/Y/Linha, identificador `X3Y8L2`, `plot 47 de 216`, ◂ / Próxima ▸ F2),
+> card "Progresso da parcela" (linha 1/2/3 + total do plot), última sync +
+> disco livre. Dados de exemplo via `status_analise.json`.
 
 ### Mock original (Tkinter, tema escuro)
 
@@ -192,7 +192,7 @@ O histórico antigo (11 padrões, 97 linhas vazias) era teste → provável **de
 | `refactor/ui-split` | quebra `painel_controle.py` em `ui/` | não (visual igual) | ✅ `151395c` |
 | `feat/ui-v1` | `tema.py` + faixas + pílula de status + atalhos | sim (visual) | ✅ |
 | `feat/estado-analisador` | analisador reporta estado; painel exibe | sim | ✅ absorvido no `status-schema` + `ui-v1` |
-| `feat/parcela` | faixa Parcela: carrega `Plan1`, X/Y/Linha, "Próxima" | sim | ⬜ RV-02/RV-06 |
+| `feat/parcela` | faixa Parcela: carrega `Plan1`, X/Y/Linha, "Próxima", Progresso do plot | sim | ✅ `core/parcela.py`, schema 2 |
 
 Cada PR é testável rodando o painel headless (`Xvfb` + screenshot), como já foi feito na análise.
 

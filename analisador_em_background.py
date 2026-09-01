@@ -12,6 +12,7 @@ import math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import config
 from core import status as status_mod
+from core import parcela as parcela_mod
 
 INTERVALO_VERIFICACAO = config.INTERVALO_VERIFICACAO_S
 MODELO_IA_PATH = config.MODELO_PATH
@@ -58,6 +59,11 @@ def _retomar_acumulado():
         ESTADO.parcela = anterior.parcela
         ESTADO.total_parcela_bruto = anterior.total_parcela_bruto
         ESTADO.total_parcela_corrigido = anterior.total_parcela_corrigido
+        ESTADO.plot = anterior.plot
+        ESTADO.linha = anterior.linha
+        ESTADO.total_linha_1 = anterior.total_linha_1
+        ESTADO.total_linha_2 = anterior.total_linha_2
+        ESTADO.total_linha_3 = anterior.total_linha_3
         if anterior.parcela:
             print(f"ANALISADOR: Retomando parcela '{anterior.parcela}' "
                   f"(acumulado: {anterior.total_parcela_corrigido} corrigido).")
@@ -106,13 +112,30 @@ def analisar_imagem(caminho_imagem, model):
             writer = csv.writer(f)
             writer.writerow([datetime.now().strftime('%Y-%m-%d %H:%M:%S'), setor_imagem, timestamp_imagem, contagem_bruta, contagem_ajustada, nome_base])
 
-        # --- acumulado por parcela: o analisador é quem soma ---
+        # --- acumulado por parcela (= linha): o analisador é quem soma ---
         if setor_imagem != ESTADO.parcela:
             ESTADO.parcela = setor_imagem
             ESTADO.total_parcela_bruto = 0
             ESTADO.total_parcela_corrigido = 0
         ESTADO.total_parcela_bruto += contagem_bruta
         ESTADO.total_parcela_corrigido += contagem_ajustada
+
+        # --- progresso do plot: acumulado por linha (X3Y7L2 -> plot X3Y7, linha 2) ---
+        parsed = parcela_mod.parse_identificador(setor_imagem)
+        if parsed:
+            x, y, linha = parsed
+            plot = parcela_mod.plot_id(x, y)
+            if plot != ESTADO.plot:
+                ESTADO.plot = plot
+                ESTADO.total_linha_1 = ESTADO.total_linha_2 = ESTADO.total_linha_3 = 0
+            ESTADO.linha = linha
+            if 1 <= linha <= 3:
+                campo = f"total_linha_{linha}"
+                setattr(ESTADO, campo, getattr(ESTADO, campo) + contagem_ajustada)
+        else:
+            ESTADO.plot = ""
+            ESTADO.linha = 0
+
         ESTADO.ultima_imagem = nome_base
         ESTADO.plantulas_bruto = contagem_bruta
         ESTADO.plantulas_corrigido = contagem_ajustada

@@ -107,6 +107,36 @@ RCLONE_REMOTE = os.environ.get("ROVER_RCLONE_REMOTE", "gdrive")
 NUVEM_BASE    = os.environ.get("ROVER_NUVEM_BASE", "Rover_FAPA_Backups")
 NUVEM_DESTINO_IMAGENS = f"{RCLONE_REMOTE}:{NUVEM_BASE}/imagens_analisadas"
 NUVEM_DESTINO_CSV     = f"{RCLONE_REMOTE}:{NUVEM_BASE}/relatorios"
+ARQUIVO_ULTIMA_SYNC = os.path.join(PASTA_LOGS, "ultima_sync.txt")
+
+# --------------------------------------------------------------------------
+# Parcela / nomenclatura  (ver RV-02, RV-06, core/parcela.py)
+# --------------------------------------------------------------------------
+# Formato do identificador do setor. Ponto único de troca enquanto o Leandro
+# não fecha o formato final (zero à esquerda? separador?).
+# Placeholders: {x} {y} {linha}.  Padrão: X3Y7L2.
+PARCELA_FORMATO = os.environ.get("ROVER_PARCELA_FORMATO", "X{x}Y{y}L{linha}")
+PLOT_FORMATO    = os.environ.get("ROVER_PLOT_FORMATO", "X{x}Y{y}")
+
+# Modo aritmético (quando não há planilha de programação carregada).
+PARCELA_X_MIN = int(os.environ.get("ROVER_PARCELA_X_MIN", "1"))
+PARCELA_X_MAX = int(os.environ.get("ROVER_PARCELA_X_MAX", "12"))
+PARCELA_Y_MIN = int(os.environ.get("ROVER_PARCELA_Y_MIN", "1"))
+PARCELA_Y_MAX = int(os.environ.get("ROVER_PARCELA_Y_MAX", "18"))
+PARCELA_LINHAS = int(os.environ.get("ROVER_PARCELA_LINHAS", "3"))
+
+# Planilha de programação da semeadora (Plan1). Se o arquivo existir, o
+# navegador entra em "modo campanha" e segue a ordem dos plots dela; se não,
+# cai no modo aritmético. Aceita .csv ou .xlsx.
+PLANILHA_PROGRAMACAO = os.environ.get(
+    "ROVER_PLANILHA_PROGRAMACAO",
+    os.path.join(BASE_DIR, "programacao_semeadora.csv"),
+)
+
+# Posição da campanha, persistida (retoma onde parou após reinício).
+ARQUIVO_PARCELA = os.path.join(PASTA_LOGS, "parcela_atual.json")
+
+EXPERIMENTO_PADRAO = os.environ.get("ROVER_EXPERIMENTO_PADRAO", "Experimento sem nome")
 
 
 # --------------------------------------------------------------------------
