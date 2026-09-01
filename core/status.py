@@ -28,10 +28,10 @@ Referências
 from __future__ import annotations
 
 import json
-import os
-import tempfile
 from dataclasses import asdict, dataclass, fields
 from datetime import datetime
+
+from . import io_atomico
 
 SCHEMA_VERSION = 2
 
@@ -77,21 +77,7 @@ class StatusAnalise:
 def escrever(caminho: str, status: StatusAnalise) -> None:
     """Grava `status` em `caminho` de forma atômica. Carimba o timestamp."""
     status.marcar_agora()
-    pasta = os.path.dirname(caminho) or "."
-    os.makedirs(pasta, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=pasta, prefix=".status_", suffix=".json")
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(status.to_dict(), f, ensure_ascii=False, indent=2)
-            f.flush()
-            os.fsync(f.fileno())
-        os.replace(tmp, caminho)
-    except BaseException:
-        try:
-            os.unlink(tmp)
-        except OSError:
-            pass
-        raise
+    io_atomico.escrever_json(caminho, status.to_dict())
 
 
 def ler(caminho: str) -> "StatusAnalise | None":

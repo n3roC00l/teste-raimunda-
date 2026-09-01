@@ -142,6 +142,10 @@ if not PLANILHA_PROGRAMACAO:
 # Posição da campanha, persistida (retoma onde parou após reinício).
 ARQUIVO_PARCELA = os.path.join(PASTA_LOGS, "parcela_atual.json")
 
+# Setor corrente (identificador). O painel grava aqui a cada "Próxima"; o
+# capturador lê a cada foto — permite trocar de carreira SEM parar a câmera.
+ARQUIVO_SETOR = os.path.join(PASTA_LOGS, "setor_atual.txt")
+
 EXPERIMENTO_PADRAO = os.environ.get("ROVER_EXPERIMENTO_PADRAO", "Experimento sem nome")
 
 

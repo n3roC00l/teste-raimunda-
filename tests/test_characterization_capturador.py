@@ -35,10 +35,17 @@ def test_padrao_do_nome_do_arquivo_pinado():
     assert 'nome_arquivo = f"{SETOR_ATUAL}_{timestamp_arquivo}.jpg"' in _fonte()
 
 
-def test_argumento_setor_e_obrigatorio():
+def test_setor_vem_do_arquivo_relido_a_cada_foto():
+    # troca de carreira sem parar a câmera: o setor não é mais só o --setor
+    # de arranque, é relido de config.ARQUIVO_SETOR dentro do loop.
     fonte = _fonte()
     assert "'--setor'" in fonte
-    assert "required=True" in fonte
+    assert "required=True" not in fonte            # deixou de ser obrigatório
+    assert "config.ARQUIVO_SETOR" in fonte
+    assert "_setor_atual()" in fonte
+    # a releitura acontece dentro do while (antes do capture_file)
+    loop = fonte.split("while True:", 1)[1]
+    assert "_setor_atual()" in loop
 
 
 def test_intervalo_e_resolucao_vem_do_config():

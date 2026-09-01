@@ -17,9 +17,26 @@ PASTA_PARA_ANALISAR = config.PASTA_PARA_ANALISAR
 os.makedirs(PASTA_PARA_ANALISAR, exist_ok=True)
 
 parser = argparse.ArgumentParser(description="Capturador de imagens para contagem de plântulas.")
-parser.add_argument('--setor', type=str, required=True, help='Nome do setor/lote a ser fotografado.')
+parser.add_argument('--setor', type=str, default=None,
+                    help='Setor inicial. Se omitido, lê de config.ARQUIVO_SETOR.')
 args = parser.parse_args()
-SETOR_ATUAL = args.setor
+SETOR_INICIAL = args.setor
+
+
+def _setor_atual():
+    """Lê o setor corrente do arquivo que o painel grava a cada 'Próxima'.
+    Permite trocar de carreira sem reiniciar a câmera."""
+    try:
+        with open(config.ARQUIVO_SETOR, encoding='utf-8') as f:
+            return f.read().strip() or None
+    except OSError:
+        return None
+
+
+SETOR_ATUAL = _setor_atual() or SETOR_INICIAL
+if not SETOR_ATUAL:
+    print("CAPTURA: !!! nenhum setor definido (nem --setor nem config.ARQUIVO_SETOR).")
+    sys.exit(1)
 
 print(f"CAPTURA: A iniciar o capturador para o setor: {SETOR_ATUAL}")
 picam2 = None
@@ -31,6 +48,7 @@ try:
     print(f"CAPTURA: Câmera pronta. A capturar imagens em '{PASTA_PARA_ANALISAR}'.")
     time.sleep(2.0)
     while True:
+        SETOR_ATUAL = _setor_atual() or SETOR_ATUAL      # relê a cada foto
         timestamp_arquivo = datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
         nome_arquivo = f"{SETOR_ATUAL}_{timestamp_arquivo}.jpg"
         caminho_completo = os.path.join(PASTA_PARA_ANALISAR, nome_arquivo)

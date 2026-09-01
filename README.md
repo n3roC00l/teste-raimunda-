@@ -37,6 +37,7 @@ flowchart LR
 | `analisador_em_background.py` | Vigia a pasta, roda YOLOv5, aplica correção estatística, grava CSV/JSON. |
 | `core/status.py` | Schema único do `status_analise.json` (leitura/escrita atômica). |
 | `core/parcela.py` | Modelo da parcela (`X3Y7L2`) + navegador da campanha (segue a planilha da semeadora ou incremento aritmético). |
+| `core/io_atomico.py` | Escrita atômica dos arquivos de estado (`status`, `parcela`, `setor`). |
 | `core/eventos.py` | Log de eventos append-only (`logs_analise/eventos.jsonl`). |
 | `core/watchdog.py` | sd_notify opcional (watchdog do systemd); no-op fora do systemd. |
 | `core/registro.py` | CSV canônico de análise (colunas *tidy*, uma variável por coluna). |
@@ -131,6 +132,10 @@ linha 1→2→3 e depois o próximo plot.
   `config.PARCELA_X_MIN..MAX` / `..Y..`.
 - A posição é **persistida** (`logs_analise/parcela_atual.json`) — o painel retoma
   onde parou depois de reiniciar.
+- **Trocar de carreira sem parar a câmera:** durante a captura, "Próxima" (F2)
+  grava o novo identificador em `logs_analise/setor_atual.txt`; o `capturador.py`
+  relê esse arquivo a cada foto. A carreira anterior congela, a nova começa a
+  somar. (`◂ Voltar` e editar experimento continuam exigindo parar a captura.)
 
 Aberto com o Leandro: formato exato do identificador (zero à esquerda? separador?),
 ordem das 3 linhas. Ver `docs/ANALISE-E-MAPA.md` e a nota `Planilha da semeadora`

@@ -34,6 +34,7 @@ from core import parcela as parcela_mod
 from core import eventos
 from core import watchdog
 from core import export as export_mod
+from core import io_atomico
 
 from . import tema
 from . import widgets
@@ -129,6 +130,18 @@ class App:
         except OSError:
             pass
 
+    def _publicar_setor(self, setor):
+        """Grava o setor corrente para o capturador ler (troca de carreira
+        sem parar a câmera)."""
+        try:
+            io_atomico.escrever_texto(config.ARQUIVO_SETOR, setor)
+        except OSError:
+            pass
+
+    def _resetar_contadores_ui(self):
+        self.lbl_total_count.config(text="0")
+        self.lbl_bruto.config(text="--")
+
     def editar_experimento(self):
         if self.is_running:
             return
@@ -141,13 +154,19 @@ class App:
             eventos.registrar("experimento_alterado", nome=self.nav.experimento)
 
     def parcela_proxima(self):
-        if self.is_running:
-            return
+        # "Próxima" pode ser usada DURANTE a captura — a câmera não para,
+        # só passa a carimbar as próximas fotos com o novo identificador.
         de = self.nav.identificador()
         self.nav.proxima()
+        para = self.nav.identificador()
         self._salvar_parcela()
         self._atualizar_parcela_ui()
-        eventos.registrar("parcela_avancada", de=de, para=self.nav.identificador())
+        if self.is_running:
+            self.setor_atual = para
+            self._publicar_setor(para)
+            self._resetar_contadores_ui()
+        eventos.registrar("parcela_avancada", de=de, para=para,
+                          durante_captura=self.is_running)
 
     def parcela_anterior(self):
         if self.is_running:
@@ -278,10 +297,10 @@ class App:
         self.is_running = True
         self.photo_count = 0
         self.setor_atual = setor_nome
+        self._publicar_setor(setor_nome)   # antes de subir o capturador
 
         self.update_gui_state()
-        self.lbl_total_count.config(text="0")
-        self.lbl_bruto.config(text="--")
+        self._resetar_contadores_ui()
         eventos.registrar("captura_iniciada", parcela=setor_nome,
                           experimento=self.nav.experimento)
 
@@ -354,9 +373,10 @@ class App:
 
     # =======================================================================
     def update_gui_state(self):
-        nav_state = "disabled" if self.is_running else "normal"
-        self._am["btn_ant"].config(state=nav_state)
-        self._am["btn_prox"].config(state=nav_state)
+        # "Próxima" continua ativa durante a captura (troca de carreira ao
+        # vivo); só "◂ Voltar" e "editar experimento" ficam travados.
+        self._am["btn_ant"].config(state="disabled" if self.is_running else "normal")
+        self._am["btn_prox"].config(state="normal")
         if self.is_running:
             self.btn_start_stop.config(text="⏹ Parar Captura · F5", bg=tema.BOTAO_STOP)
             self.btn_sync.config(state="disabled")
