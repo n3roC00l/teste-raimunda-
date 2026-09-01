@@ -1,0 +1,31 @@
+# rover.service — inicia o painel do rover no boot, reinicia se cair.
+#
+# Serviço de USUÁRIO do systemd (roda dentro da sessão gráfica).
+# Instalar:  ver deploy/README.md  (ou rodar deploy/install.sh)
+#
+# Ajuste os caminhos abaixo se o projeto ou o venv estiverem em outro lugar.
+
+[Unit]
+Description=Rover FAPA — Painel do contador de plântulas
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=notify
+NotifyAccess=all
+
+# --- caminhos (ajuste se necessário) ---
+WorkingDirectory=%h/Documentos/raimunda
+ExecStart=%h/Documentos/raimunda/venv/bin/python -u painel_controle.py
+
+# display da sessão gráfica (autologin no Pi costuma ser :0)
+Environment=DISPLAY=:0
+
+# --- robustez de campo ---
+Restart=on-failure
+RestartSec=5
+# se o painel travar (não mandar WATCHDOG=1 por 120 s), o systemd reinicia
+WatchdogSec=120
+
+[Install]
+WantedBy=graphical-session.target

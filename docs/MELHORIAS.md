@@ -230,7 +230,7 @@ irrecuperável.
 | 3 | Testes de caracterização (#7) | — | (antes do #4) | não |
 | 4 | Split de UI (#6, base) | RV-01 | `refactor/ui-split` | não |
 | 5 | Layout novo + estado do analisador (#6) | RV-01 | `feat/ui-v1`, `feat/estado-analisador` | sim — visual |
-| 6 | Robustez de campo / retomada (#3) | RV-07, RV-02 | `feat/persistencia`, `feat/systemd` | sim |
+| 6 | Robustez de campo / retomada (#3) ✅ | RV-07 | `feat/persistencia`, `feat/systemd` | sim |
 | 7 | Navegação de parcela + carga da planilha (#5) | RV-02 | `feat/parcela` | sim |
 | 8 | Protocolo de validação da contagem (#4) | **RV-08** | doc + `feat/calibracao` | sim |
 | 9 | Versionamento / rastreabilidade (#8) | transversal | contínuo | não |

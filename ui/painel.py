@@ -30,6 +30,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 from core import status as status_mod
 from core import parcela as parcela_mod
+from core import eventos
+from core import watchdog
 
 from . import tema
 from . import widgets
@@ -102,6 +104,9 @@ class App:
         self.start_analyzer()
         self.update_dashboard()
         self.root.protocol("WM_DELETE_WINDOW", self.exit_app)
+        eventos.registrar("painel_iniciado", versao=config.VERSAO,
+                          modo_parcela=self.nav.modo, parcela=self.nav.identificador())
+        watchdog.pronto()
 
     # =======================================================================
     # parcela / navegação
@@ -130,20 +135,25 @@ class App:
             self.nav.experimento = novo.strip()
             self._salvar_parcela()
             self._atualizar_parcela_ui()
+            eventos.registrar("experimento_alterado", nome=self.nav.experimento)
 
     def parcela_proxima(self):
         if self.is_running:
             return
+        de = self.nav.identificador()
         self.nav.proxima()
         self._salvar_parcela()
         self._atualizar_parcela_ui()
+        eventos.registrar("parcela_avancada", de=de, para=self.nav.identificador())
 
     def parcela_anterior(self):
         if self.is_running:
             return
+        de = self.nav.identificador()
         self.nav.anterior()
         self._salvar_parcela()
         self._atualizar_parcela_ui()
+        eventos.registrar("parcela_voltou", de=de, para=self.nav.identificador())
 
     # =======================================================================
     # dashboard
@@ -247,6 +257,7 @@ class App:
         self._atualizar_estado_sistema(st)
         self._atualizar_progresso(st)
 
+        watchdog.batida()
         self.root.after(2000, self.update_dashboard)
 
     # =======================================================================
@@ -268,6 +279,8 @@ class App:
         self.update_gui_state()
         self.lbl_total_count.config(text="0")
         self.lbl_bruto.config(text="--")
+        eventos.registrar("captura_iniciada", parcela=setor_nome,
+                          experimento=self.nav.experimento)
 
         python_executable = sys.executable
         command = [python_executable, '-u', config.SCRIPT_CAPTURADOR, '--setor', setor_nome]
@@ -281,6 +294,8 @@ class App:
             self.capturador_process.terminate()
         self.is_running = False
         self.update_gui_state()
+        eventos.registrar("captura_parada", parcela=self.setor_atual,
+                          fotos=self.photo_count)
 
     def listen_for_captures(self):
         if self.capturador_process and self.capturador_process.stdout:

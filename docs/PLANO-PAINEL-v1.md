@@ -179,7 +179,7 @@ O histórico antigo (11 padrões, 97 linhas vazias) era teste → provável **de
 - Bloco **Parcela** + botão de troca automática → **RV-02** (depende do **RV-06**)
 - Sincronização automática / agendada
 - Gráfico de progresso ao longo da linha
-- Modo kiosk / autostart no boot → **RV-07**
+- ~~Modo kiosk / autostart no boot~~ → **RV-07** ✅ `deploy/rover.service`
 - Migração e limpeza do `log_analise_total.csv` → **RV-06**
 
 ## Ordem de implementação (PRs pequenos)

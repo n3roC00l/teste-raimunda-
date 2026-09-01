@@ -5,6 +5,30 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `feat/persistencia` + `feat/systemd` — robustez de campo (frente #3)
+
+**Adicionado**
+- `core/eventos.py` — log de eventos **append-only** (`logs_analise/eventos.jsonl`,
+  uma linha JSON por evento). `registrar()` nunca levanta. Emitido por
+  painel (`painel_iniciado`, `captura_iniciada/parada`, `parcela_avancada`,
+  `experimento_alterado`), analisador (`analisador_iniciado/pronto/erro`,
+  `parcela_detectada`, `imagem_erro`) e sync (`sync_ok/erro`).
+- `core/watchdog.py` — sd_notify opcional (READY=1 / WATCHDOG=1) direto no
+  socket, sem `python3-systemd`. **No-op** fora do systemd. Painel e
+  analisador pingam a cada ciclo.
+- `deploy/rover.service` (unit systemd de usuário: `Type=notify`,
+  `Restart=on-failure`, `WatchdogSec=120`), `deploy/install.sh`,
+  `deploy/README.md` — sobe no boot, reinicia se cair/travar.
+- `tests/test_eventos.py` (6), `tests/test_watchdog.py` (3).
+
+**Nota:** a *retomada da campanha* (o "estado persistido" da frente #3) já
+tinha sido entregue em `refactor/status-schema` (status atômico) e
+`feat/parcela` (`parcela_atual.json` atômico). Esta entrega fecha o resto:
+autostart/watchdog + trilha de auditoria.
+
+**Comportamento:** só adições (log + ping). Suite: 81 casos.
+`docs/MELHORIAS.md` frente #3; RV-07.
+
 ### `feat/parcela` — parcela estruturada + navegação + progresso do plot
 
 **Adicionado**

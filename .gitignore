@@ -22,6 +22,7 @@ fotos_teste/
 logs_analise/*.csv
 logs_analise/*.json
 logs_analise/*.txt
+logs_analise/*.jsonl
 labels_yolo/
 
 # --- Datasets de treino ---
