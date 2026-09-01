@@ -132,11 +132,12 @@ PARCELA_LINHAS = int(os.environ.get("ROVER_PARCELA_LINHAS", "3"))
 
 # Planilha de programação da semeadora (Plan1). Se o arquivo existir, o
 # navegador entra em "modo campanha" e segue a ordem dos plots dela; se não,
-# cai no modo aritmético. Aceita .csv ou .xlsx.
-PLANILHA_PROGRAMACAO = os.environ.get(
-    "ROVER_PLANILHA_PROGRAMACAO",
-    os.path.join(BASE_DIR, "programacao_semeadora.csv"),
-)
+# cai no modo aritmético. Aceita .csv ou .xlsx (o operador dropa o dele na raiz).
+PLANILHA_PROGRAMACAO = os.environ.get("ROVER_PLANILHA_PROGRAMACAO", "")
+if not PLANILHA_PROGRAMACAO:
+    _csv = os.path.join(BASE_DIR, "programacao_semeadora.csv")
+    _xlsx = os.path.join(BASE_DIR, "programacao_semeadora.xlsx")
+    PLANILHA_PROGRAMACAO = _xlsx if (os.path.exists(_xlsx) and not os.path.exists(_csv)) else _csv
 
 # Posição da campanha, persistida (retoma onde parou após reinício).
 ARQUIVO_PARCELA = os.path.join(PASTA_LOGS, "parcela_atual.json")
