@@ -148,6 +148,39 @@ ARQUIVO_SETOR = os.path.join(PASTA_LOGS, "setor_atual.txt")
 
 EXPERIMENTO_PADRAO = os.environ.get("ROVER_EXPERIMENTO_PADRAO", "Experimento sem nome")
 
+# --------------------------------------------------------------------------
+# Gêmeo digital do ensaio (visão 3D)  (ver core/campo.py, docs/GEMEO-3D.md)
+# --------------------------------------------------------------------------
+# Geometria padrão, usada quando a planilha não traz a coluna (ou não há
+# planilha). Valores da Plan1 de exemplo: plot de 6 m, passagem de 1 m,
+# carreiras a 50 cm.
+CAMPO_COMPRIMENTO_CM = float(os.environ.get("ROVER_CAMPO_COMPRIMENTO_CM", "600"))
+CAMPO_PASSAGEM_CM    = float(os.environ.get("ROVER_CAMPO_PASSAGEM_CM", "100"))
+CAMPO_ESPACAMENTO_CM = float(os.environ.get("ROVER_CAMPO_ESPACAMENTO_CM", "50"))
+# Folga entre plots vizinhos na direção transversal às carreiras (bordadura).
+CAMPO_FOLGA_CM = float(os.environ.get("ROVER_CAMPO_FOLGA_CM", "0"))
+# Padrão: X anda transversal às carreiras e Y ao longo delas, como dizem os
+# nomes das colunas ("Parcela Larg. (X)", "Parcela Compr.(Y)"). Ainda em
+# aberto com o Leandro (as abas Plan1 e Planilha1 divergem): "1" inverte.
+CAMPO_TROCAR_EIXOS = os.environ.get("ROVER_CAMPO_TROCAR_EIXOS", "0") == "1"
+
+# Limiares de alerta. PROVISÓRIOS: fechar com o Leandro (frente #6,
+# racionalização de alarmes). Emergência = plantas contadas (corrigido) ÷
+# grãos semeados na carreira.
+CAMPO_EMERGENCIA_ATENCAO = float(os.environ.get("ROVER_CAMPO_EMERGENCIA_ATENCAO", "0.70"))
+CAMPO_EMERGENCIA_CRITICO = float(os.environ.get("ROVER_CAMPO_EMERGENCIA_CRITICO", "0.50"))
+# Acima disto, suspeita de dupla contagem (fotos sobrepostas) ou de erro na planilha.
+CAMPO_EMERGENCIA_MAXIMA  = float(os.environ.get("ROVER_CAMPO_EMERGENCIA_MAXIMA", "1.20"))
+CAMPO_FILA_ATENCAO       = int(os.environ.get("ROVER_CAMPO_FILA_ATENCAO", "20"))
+# Captura ligada e o analisador sem gravar status há mais que isto: travou?
+CAMPO_STATUS_VELHO_S     = float(os.environ.get("ROVER_CAMPO_STATUS_VELHO_S", "30"))
+CAMPO_SYNC_VELHA_S       = float(os.environ.get("ROVER_CAMPO_SYNC_VELHA_S", "7200"))
+CAMPO_DISCO_ATENCAO_GB   = float(os.environ.get("ROVER_CAMPO_DISCO_ATENCAO_GB", "5"))
+CAMPO_DISCO_CRITICO_GB   = float(os.environ.get("ROVER_CAMPO_DISCO_CRITICO_GB", "1"))
+
+# Quantos eventos recentes vão no snapshot (linha do tempo da visão).
+CAMPO_EVENTOS_LIMITE = int(os.environ.get("ROVER_CAMPO_EVENTOS_LIMITE", "200"))
+
 
 # --------------------------------------------------------------------------
 # Helpers

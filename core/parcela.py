@@ -77,18 +77,25 @@ _COL_Y = "Parcela Compr.(Y)"
 _COL_EXP = "ID Opcional"
 
 
-def carregar_plots(caminho):
-    """Lê a Plan1 (.csv ou .xlsx). Retorna (lista_de_(x,y), experimento) na
-    ordem do arquivo, ou None se o arquivo não existe / não deu para ler."""
+def ler_planilha(caminho):
+    """Lê a Plan1 (.csv ou .xlsx) como lista de dicts (cabeçalho -> valor),
+    na ordem do arquivo. None se o arquivo não existe / não deu para ler."""
     if not caminho or not os.path.exists(caminho):
         return None
     try:
         if caminho.lower().endswith(".xlsx"):
-            linhas = _ler_xlsx(caminho)
-        else:
-            with open(caminho, newline="", encoding="utf-8-sig") as f:
-                linhas = list(csv.DictReader(f))
+            return list(_ler_xlsx(caminho))
+        with open(caminho, newline="", encoding="utf-8-sig") as f:
+            return list(csv.DictReader(f))
     except Exception:
+        return None
+
+
+def carregar_plots(caminho):
+    """Lê a Plan1 (.csv ou .xlsx). Retorna (lista_de_(x,y), experimento) na
+    ordem do arquivo, ou None se o arquivo não existe / não deu para ler."""
+    linhas = ler_planilha(caminho)
+    if linhas is None:
         return None
 
     plots = []
