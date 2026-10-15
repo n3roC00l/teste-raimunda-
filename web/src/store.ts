@@ -11,7 +11,8 @@ export type Selecao =
   | { tipo: "rover" }
   | null;
 export type ModoCor = "estado" | "emergencia";
-export type AlvoCamera = "tudo" | "rover" | "selecao";
+export type AlvoCamera = "tudo" | "rover" | "selecao" | "entorno";
+export type Luz = "real" | "dia";
 
 interface Estado {
   snap: Snapshot | null;
@@ -24,6 +25,10 @@ interface Estado {
   hover: string | null; // id de plot ou carreira sob o ponteiro
   modoCor: ModoCor;
   pedidoCamera: { alvo: AlvoCamera; n: number };
+  /** cena viva (rover andando, cenário). Pausa: economiza bateria. */
+  animacao: boolean;
+  /** "real": sol e noite pela hora do Pi; "dia": sempre de dia */
+  luz: Luz;
 
   receber: (snap: Snapshot, demo: boolean) => void;
   falhou: (erro: string) => void;
@@ -33,7 +38,12 @@ interface Estado {
   setHover: (id: string | null) => void;
   setModoCor: (modo: ModoCor) => void;
   pedirCamera: (alvo: AlvoCamera) => void;
+  setAnimacao: (ligada: boolean) => void;
+  setLuz: (luz: Luz) => void;
 }
+
+// quem pediu menos movimento no sistema começa com a animação pausada
+const menosMovimento = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // Duas falhas seguidas (~4 s) antes de dizer "sem conexão": uma resposta
 // perdida no Wi-Fi do campo não deve piscar o aviso.
@@ -51,6 +61,8 @@ export const useEstado = create<Estado>((set) => ({
   // ?modo=emergencia abre já no mapa de emergência (ex.: tela de apresentação)
   modoCor: new URLSearchParams(location.search).get("modo") === "emergencia" ? "emergencia" : "estado",
   pedidoCamera: { alvo: "tudo", n: 0 },
+  animacao: !menosMovimento,
+  luz: "real",
 
   receber: (snap, demo) =>
     set({ snap, conexao: demo ? "demo" : "ao_vivo", recebidoEm: performance.now(), falhas: 0, erro: null }),
@@ -66,4 +78,6 @@ export const useEstado = create<Estado>((set) => ({
   setHover: (hover) => set({ hover }),
   setModoCor: (modoCor) => set({ modoCor }),
   pedirCamera: (alvo) => set((e) => ({ pedidoCamera: { alvo, n: e.pedidoCamera.n + 1 } })),
+  setAnimacao: (animacao) => set({ animacao }),
+  setLuz: (luz) => set({ luz }),
 }));

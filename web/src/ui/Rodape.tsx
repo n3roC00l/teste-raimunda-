@@ -56,10 +56,24 @@ function LinhaDoTempo({ snap }: { snap: Snapshot }) {
   );
 }
 
+function Notas({ snap }: { snap: Snapshot }) {
+  return (
+    <p className="ajuda">
+      rover: posição estimada · plântulas: quantidade contada, posição ilustrativa · carros, nuvens e aves: cenário
+      <br />
+      mapa © OpenStreetMap · prédios da FAPA aproximados{snap.campo.geo.aproximado ? " · local do ensaio aproximado" : ""}
+    </p>
+  );
+}
+
 export default function Rodape({ snap }: { snap: Snapshot }) {
   const modo = useEstado((e) => e.modoCor);
   const setModo = useEstado((e) => e.setModoCor);
   const pedirCamera = useEstado((e) => e.pedirCamera);
+  const animacao = useEstado((e) => e.animacao);
+  const setAnimacao = useEstado((e) => e.setAnimacao);
+  const luz = useEstado((e) => e.luz);
+  const setLuz = useEstado((e) => e.setLuz);
   return (
     <footer className="rodape">
       <div className="controles cartao">
@@ -74,14 +88,31 @@ export default function Rodape({ snap }: { snap: Snapshot }) {
         <Legenda snap={snap} />
         <div className="botoes">
           <button className="botao" onClick={() => pedirCamera("tudo")}>
-            Ver o campo todo
+            Campo todo
           </button>
           {snap.rover.posicao && (
             <button className="botao" onClick={() => pedirCamera("rover")}>
               Ir ao rover
             </button>
           )}
+          <button className="botao" onClick={() => pedirCamera("entorno")}>
+            Ver a FAPA
+          </button>
         </div>
+        <div className="botoes">
+          <button className="botao" aria-pressed={!animacao} onClick={() => setAnimacao(!animacao)}>
+            {animacao ? "Pausar animação" : "Animar"}
+          </button>
+          <div className="alternador" role="radiogroup" aria-label="Luz">
+            <button role="radio" aria-checked={luz === "real"} className={luz === "real" ? "ativo" : ""} onClick={() => setLuz("real")}>
+              Hora real
+            </button>
+            <button role="radio" aria-checked={luz === "dia"} className={luz === "dia" ? "ativo" : ""} onClick={() => setLuz("dia")}>
+              Sempre dia
+            </button>
+          </div>
+        </div>
+        <Notas snap={snap} />
         <p className="ajuda">arrastar: mover · botão direito: girar · roda: zoom</p>
       </div>
       <LinhaDoTempo snap={snap} />

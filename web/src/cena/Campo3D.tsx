@@ -66,11 +66,11 @@ export default function Campo3D({ snap }: { snap: Snapshot }) {
     [campo, emAlerta],
   );
 
-  const margem = 8;
+  const margem = 4;
   const plot = (id: string) => selecionar({ tipo: "plot", id });
   return (
     <group>
-      <mesh rotation-x={-Math.PI / 2} position={[campo.comprimento_m / 2, -0.01, campo.largura_m / 2]}>
+      <mesh rotation-x={-Math.PI / 2} position={[campo.comprimento_m / 2, -0.02, campo.largura_m / 2]} raycast={() => null}>
         <planeGeometry args={[campo.comprimento_m + margem * 2, campo.largura_m + margem * 2]} />
         <meshLambertMaterial color={COR.chao} />
       </mesh>

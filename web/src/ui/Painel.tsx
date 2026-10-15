@@ -3,6 +3,7 @@ import { urlFoto } from "../api";
 import { dataHora, duracao, hora, numero, pct } from "../formato";
 import { idadeAgora, useAgora } from "../hooks";
 import { useIndice, type Indice } from "../indice";
+import { roverAnim } from "../cena/ambiente";
 import { useEstado } from "../store";
 import type { Carreira, Plot, Snapshot } from "../tipos";
 import { IconeAlerta, ItemAlerta, Linha, Pilula, PilulaAnalisador, type Tom } from "./Comum";
@@ -55,9 +56,23 @@ function VistaRover({ snap, idx }: { snap: Snapshot; idx: Indice }) {
             {r.posicao.plot}
             {r.posicao.ordem && r.posicao.total_plots ? ` · ${r.posicao.ordem} de ${r.posicao.total_plots}` : ""}
           </Linha>
-          <Linha rotulo="Ao longo da carreira" dica="O rover não tem odômetro nem GPS: a tela não sabe em que ponto da carreira ele está.">
-            não medido
+          <Linha
+            rotulo="Ao longo da carreira"
+            dica={
+              r.movimento
+                ? `ESTIMADO (sem odômetro): tempo desde o início da carreira ÷ duração típica (${r.movimento.fonte_duracao}).`
+                : "O rover não tem odômetro nem GPS."
+            }
+          >
+            {r.capturando && r.movimento?.progresso_estimado != null
+              ? `~${pct(roverAnim.visivel ? roverAnim.progresso : r.movimento.progresso_estimado)} (estimado)`
+              : "parado"}
           </Linha>
+          {r.movimento && (
+            <Linha rotulo="Duração típica da carreira" dica={`fonte: ${r.movimento.fonte_duracao}`}>
+              {duracao(r.movimento.duracao_tipica_s)}
+            </Linha>
+          )}
         </>
       ) : (
         <p className="discreto">{snap.campanha_atual ? "O painel ainda não gravou a posição." : "Campanha encerrada: o rover não está neste campo."}</p>

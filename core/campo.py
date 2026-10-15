@@ -42,6 +42,7 @@ from bisect import bisect_left, insort
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime
+from statistics import median
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
@@ -256,7 +257,9 @@ class _LeitorCSV(_LeitorIncremental):
 
 class _LeitorEventos(_LeitorIncremental):
     """Do eventos.jsonl guarda só o que o snapshot usa: os últimos N, os
-    instantes de sync/export e se a captura está ligada."""
+    instantes de sync/export, se a captura está ligada, quando a carreira
+    atual começou e quanto duraram as carreiras feitas com a câmera ligada
+    (para estimar a posição do rover, que não tem odômetro)."""
 
     def _zerar(self):
         self.recentes = deque(maxlen=config.CAMPO_EVENTOS_LIMITE)
@@ -264,6 +267,16 @@ class _LeitorEventos(_LeitorIncremental):
         self.capturando = False
         self.ultimo_ts = None
         self.total = 0
+        self.inicio = (None, None)          # (identificador, instante) da carreira atual
+        self.duracoes = deque(maxlen=200)   # segundos de cada carreira capturada
+
+    def _fechar_carreira(self, t):
+        """Fecha a carreira em andamento (se a câmera estava ligada)."""
+        comeco = self.inicio[1]
+        if self.capturando and comeco and t:
+            d = (t - comeco).total_seconds()
+            if 1 <= d <= 1800:              # fora disso: pausa, não é carreira
+                self.duracoes.append(d)
 
     def atualizar(self, caminho):
         for ln in self._novas_linhas(caminho):
@@ -285,8 +298,18 @@ class _LeitorEventos(_LeitorIncremental):
             # vale o último evento que decide se a captura está ligada
             if nome == "captura_iniciada":
                 self.capturando = True
-            elif nome in ("captura_parada", "painel_iniciado"):
+                self.inicio = (ev.get("parcela"), t)
+            elif nome == "parcela_avancada":
+                self._fechar_carreira(t)
+                self.inicio = (ev.get("para"), t)
+            elif nome == "parcela_voltou":
+                self.inicio = (ev.get("para"), t)
+            elif nome == "captura_parada":
+                self._fechar_carreira(t)
                 self.capturando = False
+            elif nome == "painel_iniciado":
+                self.capturando = False
+                self.inicio = (ev.get("parcela"), t)
         return self
 
 
@@ -534,12 +557,45 @@ def _kpis(plots, st, ultima_sync, ultima_atividade, agora):
     }
 
 
-def _rover(st, nav, capturando, agora):
+def _movimento(nav, ev, acc, agora):
+    """Onde o rover deve estar ao longo da carreira: ESTIMATIVA, porque não há
+    odômetro nem GPS. Tempo desde que a carreira começou (evento gravado pelo
+    painel) dividido pela duração típica de uma carreira (mediana do histórico
+    de eventos; sem histórico, nº típico de fotos x intervalo; sem nada, padrão)."""
+    atual = nav.identificador()
+    comeco = ev.inicio[1] if ev.inicio[0] == atual else None
+    if len(ev.duracoes) >= 3:
+        duracao, fonte = median(ev.duracoes), "histórico de carreiras"
+    else:
+        fotos = [a["imagens"] for (x, y, l), a in acc.items() if (x, y, l) != (nav.x, nav.y, nav.linha)]
+        if len(fotos) >= 3:
+            duracao, fonte = median(fotos) * config.INTERVALO_CAPTURA_S, "fotos por carreira"
+        else:
+            duracao, fonte = config.CAMPO_DURACAO_CARREIRA_PADRAO_S, "padrão (sem histórico)"
+    idade = _idade(agora, comeco)
+    progresso = None
+    if ev.capturando and idade is not None and duracao > 0:
+        progresso = round(min(1.0, max(0.0, idade / duracao)), 3)
+    serpentina = config.CAMPO_TRAJETO == "serpentina"
+    return {
+        "inicio_carreira": _fmt(comeco),
+        "idade_carreira_s": idade,
+        "duracao_tipica_s": round(duracao, 1),
+        "fonte_duracao": fonte,
+        "progresso_estimado": progresso,
+        "sentido": -1 if (serpentina and nav.linha % 2 == 0) else 1,
+        "trajeto": config.CAMPO_TRAJETO,
+        "intervalo_captura_s": config.INTERVALO_CAPTURA_S,
+    }
+
+
+def _rover(st, nav, capturando, agora, movimento=None):
     status_em = _ts(st.timestamp) if st else None
     idade = _idade(agora, status_em)
     teve_foto = bool(st and st.ultima_imagem)
     rover = {
         "posicao": None,
+        "movimento": None,
         "capturando": capturando,
         "analisador_estado": st.analisador_estado if st else "desconhecido",
         "fila_pendente": st.fila_pendente if st else None,
@@ -559,6 +615,7 @@ def _rover(st, nav, capturando, agora):
             "ordem": nav.indice + 1 if nav.plots else None,
             "total_plots": nav.total_plots,
         }
+        rover["movimento"] = movimento
 
     alertas = []
     if st and st.analisador_estado == "erro":
@@ -710,9 +767,18 @@ def montar_snapshot(experimento=None, fontes=None, agora=None, telemetria=None, 
             **par,
             "largura_m": round(largura, 3),
             "comprimento_m": round(comprimento, 3),
+            "geo": {
+                "lat": config.CAMPO_GEO_LAT,
+                "lon": config.CAMPO_GEO_LON,
+                "rumo_graus": config.CAMPO_GEO_RUMO_GRAUS,
+                "espelhar": config.CAMPO_GEO_ESPELHAR,
+                "aproximado": config.CAMPO_GEO_APROXIMADO,
+                "fuso_horas": config.CAMPO_FUSO_HORAS,
+            },
             "plots": plots,
         },
-        "rover": _rover(st, nav, ev.capturando, agora),
+        "rover": _rover(st, nav, ev.capturando, agora,
+                        _movimento(nav, ev, acc, agora) if nav else None),
         "kpis": kpis,
         "saude": _saude(telemetria, kpis),
         "eventos": list(ev.recentes),

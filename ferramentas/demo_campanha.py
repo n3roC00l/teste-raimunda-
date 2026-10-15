@@ -84,7 +84,7 @@ def _emergencia_verdadeira(x, y, linha, rng):
 class Campanha:
     """Anda pelas carreiras na ordem da planilha, gravando como o rover grava."""
 
-    def __init__(self, pasta, rng, ao_vivo, fotos_por_carreira):
+    def __init__(self, pasta, rng, ao_vivo, fotos_por_carreira, manobra_s=3.0, inicio=INICIO_FIXO):
         os.environ["ROVER_BASE_DIR"] = pasta      # antes de importar config
         sys.path.insert(0, RAIZ)
         import config
@@ -92,12 +92,14 @@ class Campanha:
         self.config, self.io, self.registro, self.status = config, io_atomico, registro, status
 
         self.rng, self.ao_vivo, self.k = rng, ao_vivo, fotos_por_carreira
+        self.manobra_s = manobra_s
+        self.sync_a_cada = 12 if ao_vivo else 45     # ao vivo: backup a cada ~2 min
         self.logs = _preparar_pasta(pasta)
         self.densidade = _escrever_planilha(os.path.join(pasta, "programacao_semeadora.csv"), rng)
         registro.garantir_csv(config.ARQUIVO_CSV)
         self.ordem = [(x, y, l) for x in range(1, NX + 1)
                       for y in range(1, NY + 1) for l in range(1, CARREIRAS + 1)]
-        self.relogio = INICIO_FIXO
+        self.relogio = inicio
         self.tempo_real = False    # o histórico inicial anda em tempo simulado
         self.i = 0                 # índice da carreira atual em self.ordem
         self.fotos_na_carreira = 0
@@ -185,7 +187,9 @@ class Campanha:
         de = "X{}Y{}L{}".format(*self.ordem[self.i])
         self.i += 1
         self.fotos_na_carreira = 0
-        self._agora(20)                                  # manobra até a próxima carreira
+        if self.tempo_real:
+            time.sleep(self.manobra_s)                   # manobra até a próxima carreira
+        self._agora(20)
         if self.i >= len(self.ordem):
             self._evento("captura_parada", parcela=de, fotos=self.k)
             self.st.analisador_estado = "pronto"
@@ -193,7 +197,7 @@ class Campanha:
             return
         para = self._posicao()
         self._evento("parcela_avancada", de=de, para=para, durante_captura=True)
-        if self.i % 45 == 0:                             # um backup de vez em quando
+        if self.i % self.sync_a_cada == 0:               # um backup de vez em quando
             self._evento("sync_ok")
             self.io.escrever_texto(self.config.ARQUIVO_ULTIMA_SYNC,
                                    self.relogio.strftime("%Y-%m-%d %H:%M:%S"))
@@ -223,12 +227,16 @@ def main(argv=None):
     ap.add_argument("--fotos-por-carreira", type=int, default=8)
     ap.add_argument("--intervalo", type=float, default=0.9, help="segundos entre fotos (ao vivo)")
     ap.add_argument("--semente", type=int, default=7)
+    ap.add_argument("--manobra", type=float, default=3.0, help="segundos de manobra entre carreiras (ao vivo)")
+    ap.add_argument("--inicio", default=INICIO_FIXO.strftime("%Y-%m-%d %H:%M:%S"),
+                    help="início da campanha no snapshot estático (ex.: '2026-10-15 17:30:00' para um fim de tarde)")
     args = ap.parse_args(argv)
     if not args.snapshot and not args.ao_vivo:
         ap.error("use --snapshot ARQUIVO e/ou --ao-vivo")
 
     pasta = os.path.abspath(args.dir or tempfile.mkdtemp(prefix="rover-demo-"))
-    camp = Campanha(pasta, random.Random(args.semente), args.ao_vivo, args.fotos_por_carreira)
+    camp = Campanha(pasta, random.Random(args.semente), args.ao_vivo, args.fotos_por_carreira, args.manobra,
+                    datetime.fromisoformat(args.inicio))
     camp.historico(args.progresso)
 
     if args.snapshot:

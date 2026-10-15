@@ -5,6 +5,22 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `feat/web-gemeo-vida`: cena viva (animação o tempo todo) no entorno da FAPA
+
+**Adicionado**
+- Animação contínua (pausável; respeita "menos movimento" do sistema). Ligada a
+  DADO: rover anda na carreira com posição ESTIMADA (tempo desde o início da
+  carreira ÷ duração típica, `rover.movimento` no snapshot), manobra em U entre
+  carreiras (serpentina), rodas, flash a cada foto, plântulas brotando
+  (quantidade real, posição ilustrativa), "+N plantas", resumo ao fechar
+  carreira, partículas no backup, sol e noite pela hora do Pi.
+- Entorno da FAPA a partir do OpenStreetMap (`ferramentas/osm_entorno.py` ->
+  `web/public/entorno/fapa.json`, ODbL), prédios da FAPA aproximados.
+  CENÁRIO decorativo (rotulado): lavouras vizinhas, árvores com vento, trânsito
+  na PR-540, sombras de nuvem, aves. `?vista=fapa`, botão "Ver a FAPA".
+- `core/campo.py`: `campo.geo` (config `CAMPO_GEO_*`, aproximado) e
+  `rover.movimento`. Demo: `--manobra`, `--inicio`. Suite: 175 casos.
+
 ### `feat/web-gemeo-v0`: a visão 3D do ensaio
 
 **Adicionado**

@@ -54,6 +54,15 @@ export interface Plot {
   carreiras: Carreira[];
 }
 
+export interface GeoCampo {
+  lat: number; // canto do plot X1Y1 no começo da carreira 1
+  lon: number;
+  rumo_graus: number; // para onde as carreiras andam (a partir do norte, horário)
+  espelhar: boolean;
+  aproximado: boolean;
+  fuso_horas: number;
+}
+
 export interface Campo {
   carreiras_por_plot: number;
   espacamento_m: number;
@@ -64,6 +73,7 @@ export interface Campo {
   eixos_trocados: boolean;
   largura_m: number;
   comprimento_m: number;
+  geo: GeoCampo;
   plots: Plot[];
 }
 
@@ -78,8 +88,21 @@ export interface Posicao {
   total_plots: number | null;
 }
 
+/** Estimativa (não há odômetro): tempo na carreira ÷ duração típica. */
+export interface Movimento {
+  inicio_carreira: string | null;
+  idade_carreira_s: number | null;
+  duracao_tipica_s: number;
+  fonte_duracao: string;
+  progresso_estimado: number | null;
+  sentido: 1 | -1;
+  trajeto: string;
+  intervalo_captura_s: number;
+}
+
 export interface Rover {
   posicao: Posicao | null;
+  movimento: Movimento | null;
   capturando: boolean;
   analisador_estado: string;
   fila_pendente: number | null;
@@ -170,4 +193,16 @@ export interface Snapshot {
   kpis: Kpis;
   saude: Saude;
   eventos: Evento[];
+}
+
+// --- entorno (ferramentas/osm_entorno.py -> public/entorno/fapa.json) ---
+export type Ponto = [number, number]; // [lat, lon]
+
+export interface Entorno {
+  fonte: string;
+  estradas: { tipo: string; nome: string; ref: string; largura_m: number; pontos: Ponto[] }[];
+  rios: { nome: string; largura_m: number; pontos: Ponto[] }[];
+  areas: { tipo: "mata" | "agua" | "sede_rural" | "gramado"; nome: string; pontos: Ponto[] }[];
+  predios: { nome: string; tipo: "predio" | "galpao" | "estufa"; altura_m: number; aproximado: boolean; pontos: Ponto[] }[];
+  marcos: { nome: string; lat: number; lon: number }[];
 }
