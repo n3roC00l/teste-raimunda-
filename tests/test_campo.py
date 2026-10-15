@@ -353,6 +353,7 @@ def test_saude_alerta_de_disco_e_backup(fontes):
     tele = {"cpu_temp_c": 51.0, "disco_livre_gb": 0.5, "processos": {}}
     s = _snap(fontes, telemetria=tele)
     motivos = [a["motivo"] for a in s["saude"]["alertas"]]
+    assert {a["codigo"] for a in s["saude"]["alertas"]} == {"disco", "backup"}
     assert s["saude"]["alerta"] == "critico"
     assert any("disco" in m for m in motivos)
     assert any("nenhum backup" in m for m in motivos)

@@ -562,12 +562,12 @@ def _rover(st, nav, capturando, agora):
 
     alertas = []
     if st and st.analisador_estado == "erro":
-        alertas.append({"alerta": "critico", "motivo": "analisador em erro"})
+        alertas.append({"alerta": "critico", "codigo": "analisador_erro", "motivo": "analisador em erro"})
     if capturando and idade is not None and idade > config.CAMPO_STATUS_VELHO_S:
-        alertas.append({"alerta": "atencao",
+        alertas.append({"alerta": "atencao", "codigo": "analise_parada",
                         "motivo": f"captura ligada e nenhuma análise há {idade:.0f} s"})
     if st and st.fila_pendente >= config.CAMPO_FILA_ATENCAO:
-        alertas.append({"alerta": "atencao",
+        alertas.append({"alerta": "atencao", "codigo": "fila",
                         "motivo": f"fila de análise com {st.fila_pendente} fotos"})
     rover["alertas"] = alertas
     rover["alerta"], rover["motivo"] = _pior(alertas)
@@ -579,15 +579,15 @@ def _saude(tele, kpis):
     livre = (tele or {}).get("disco_livre_gb")
     if livre is not None:
         if livre < config.CAMPO_DISCO_CRITICO_GB:
-            alertas.append({"alerta": "critico", "motivo": f"disco com {livre:.1f} GB livres"})
+            alertas.append({"alerta": "critico", "codigo": "disco", "motivo": f"disco com {livre:.1f} GB livres"})
         elif livre < config.CAMPO_DISCO_ATENCAO_GB:
-            alertas.append({"alerta": "atencao", "motivo": f"disco com {livre:.1f} GB livres"})
+            alertas.append({"alerta": "atencao", "codigo": "disco", "motivo": f"disco com {livre:.1f} GB livres"})
     if kpis["imagens"]:
         idade = kpis["idade_sync_s"]
         if idade is None:
-            alertas.append({"alerta": "atencao", "motivo": "nenhum backup na nuvem ainda"})
+            alertas.append({"alerta": "atencao", "codigo": "backup", "motivo": "nenhum backup na nuvem ainda"})
         elif idade > config.CAMPO_SYNC_VELHA_S:
-            alertas.append({"alerta": "atencao",
+            alertas.append({"alerta": "atencao", "codigo": "backup",
                             "motivo": f"último backup há {idade / 3600:.1f} h"})
     alerta, motivo = _pior(alertas)
     return {"telemetria": tele, "alertas": alertas, "alerta": alerta, "motivo": motivo}

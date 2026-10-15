@@ -128,6 +128,34 @@ com a campanha inteira: primeira resposta ~130 ms, depois <1 ms, ~19 KB com
 gzip. Não escreve nada em disco (há teste para isso). No Pi:
 `./deploy/install.sh --visao` (ver `deploy/README.md`).
 
+## A tela (`web/`)
+
+![modo estado](screenshots/gemeo-v0-estado.png)
+![modo emergência](screenshots/gemeo-v0-emergencia.png)
+
+*(capturas da campanha sintética de demonstração, não de dados reais)*
+
+- **Cena:** o campo em escala real, a partir da planilha. Carreira com dado
+  fica mais alta, e com alerta mais alta ainda. Plot em alerta ganha um pino 3D,
+  para o alerta nunca depender só de cor. O rover fica no começo da carreira
+  em que o painel diz que ele está, porque a posição ao longo dela não é medida;
+  a carreira inteira acende, e pulsa enquanto captura.
+- **Dois modos de cor:** *Estado* (neutro; roxo = capturando; âmbar/vermelho =
+  alerta) e *Emergência* (rampa azul de 6 faixas, cortes de alerta vindos de
+  `config.py`). Cores validadas para daltonismo e contraste contra o fundo.
+- **Câmera:** abre numa vista de trabalho oblíqua em volta do rover; "ver o
+  campo todo" olha mais de cima (o ensaio é uma tira de 125 x 18 m). Chegar
+  dado novo nunca mexe na câmera.
+- **Painel lateral:** rover (posição, última foto, sistema, alertas), plot
+  (tabela das 3 carreiras) ou carreira (linhagem com horários gravados).
+  A lista de plots em alerta é a "tabela" acessível do mapa.
+- **Honestidade:** selo "ao vivo" só com resposta recente; "sem conexão" mostra
+  há quanto tempo; DEMONSTRAÇÃO sempre visível com dado sintético; a nota sobre
+  o que a contagem significa fica no rodapé do painel.
+
+Como rodar: `web/README.md`. Demonstração completa sem o rover:
+`./ferramentas/rodar_demo.sh` (campanha sintética ao vivo + servidor).
+
 ## Limitações conhecidas
 
 - **Contagem = soma das fotos.** Fotos sobrepostas podem contar a mesma planta
@@ -149,7 +177,7 @@ gzip. Não escreve nada em disco (há teste para isso). No Pi:
 |---|---|---|
 | `feat/campo-snapshot` | `core/campo.py` + testes + CLI | feito |
 | `feat/servidor-visao` | servidor HTTP só leitura + `deploy/visao.service` | feito |
-| `feat/web-gemeo-v0` | cena 3D: grade, rover, clique → painel; modo DEMO | a fazer |
+| `feat/web-gemeo-v0` | cena 3D: grade, rover, clique → painel; modo DEMO | feito |
 | `feat/web-gemeo-v1` | KPIs, linha do tempo, replay, zoom semântico, fotos | a fazer |
 | `feat/exportar-gemeo` | HTML autossuficiente (escritório, estande) | a fazer |
 | depois | caixas do YOLO em arquivo à parte, incerteza do RV-08, encoder na roda | conforme o campo |
