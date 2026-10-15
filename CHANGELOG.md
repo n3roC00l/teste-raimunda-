@@ -5,6 +5,33 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `feat/campo-snapshot`: snapshot do ensaio para a visão 3D
+
+**Adicionado**
+- `core/campo.py`: junta planilha (geometria + grãos), CSV canônico, status,
+  posição do painel e eventos num único JSON versionado (`schema: 1`), só
+  leitura. Por carreira: estado, contagem, esperado, **emergência** (plantas ÷
+  grãos semeados), nº de fotos, horários, linhagem (sincronizada/exportada),
+  versões e alerta. Mais: posição do rover, KPIs calculados num lugar só,
+  saúde do Pi (temperatura, disco, processos vivos), últimos eventos.
+- `campo.Cache`: leitura incremental do CSV e do `eventos.jsonl` (só as linhas
+  novas; recomeça se o arquivo for trocado; ignora linha pela metade) e
+  planilha relida só quando muda. Campanha inteira: ~100 ms → ~13 ms.
+- CLI: `python -m core.campo [--experimento NOME] [--compacto] [--sem-telemetria]`.
+- `config.py`: geometria padrão (`CAMPO_*_CM`), `CAMPO_TROCAR_EIXOS` (X vs Y em
+  aberto) e limiares de alerta **provisórios** (`CAMPO_EMERGENCIA_*`,
+  `CAMPO_FILA_ATENCAO`, `CAMPO_STATUS_VELHO_S`, `CAMPO_SYNC_VELHA_S`,
+  `CAMPO_DISCO_*`).
+- `docs/GEMEO-3D.md`: regras, arquitetura, schema, definições, roadmap.
+- `tests/test_campo.py` (37).
+
+**Alterado**
+- `core/parcela.py`: `ler_planilha()` público (o `carregar_plots` passa a usar).
+  Comportamento igual.
+
+**Comportamento:** nada muda no rover; é um módulo novo, só de leitura.
+Suite: 138 casos.
+
 ### `feat/troca-carreira-ao-vivo` — mudar de carreira sem parar a câmera
 
 **Adicionado**
