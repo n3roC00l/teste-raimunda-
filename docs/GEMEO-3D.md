@@ -178,6 +178,7 @@ Como rodar: `web/README.md`. Demonstração completa sem o rover:
 | `feat/campo-snapshot` | `core/campo.py` + testes + CLI | feito |
 | `feat/servidor-visao` | servidor HTTP só leitura + `deploy/visao.service` | feito |
 | `feat/web-gemeo-v0` | cena 3D: grade, rover, clique → painel; modo DEMO | feito |
-| `feat/web-gemeo-v1` | KPIs, linha do tempo, replay, zoom semântico, fotos | a fazer |
+| `feat/web-gemeo-vida` | cena viva: rover estimado, plântulas, efeitos, dia/noite, entorno da FAPA | feito |
+| `feat/web-gemeo-v1` | replay, tira de fotos | a fazer |
 | `feat/exportar-gemeo` | HTML autossuficiente (escritório, estande) | a fazer |
 | depois | caixas do YOLO em arquivo à parte, incerteza do RV-08, encoder na roda | conforme o campo |

@@ -181,6 +181,26 @@ CAMPO_DISCO_CRITICO_GB   = float(os.environ.get("ROVER_CAMPO_DISCO_CRITICO_GB", 
 # Quantos eventos recentes vão no snapshot (linha do tempo da visão).
 CAMPO_EVENTOS_LIMITE = int(os.environ.get("ROVER_CAMPO_EVENTOS_LIMITE", "200"))
 
+# Onde o ensaio fica no mundo (para o entorno da FAPA e o sol na visão 3D).
+# Ponto = canto do plot X1Y1 no começo da carreira 1; rumo = direção em que
+# as carreiras andam (graus a partir do norte, sentido horário). APROXIMADO:
+# estimado na área experimental ao lado da sede da FAPA (Entre Rios,
+# Guarapuava); confirmar o bloco exato com o Leandro.
+CAMPO_GEO_LAT        = float(os.environ.get("ROVER_CAMPO_GEO_LAT", "-25.54622"))
+CAMPO_GEO_LON        = float(os.environ.get("ROVER_CAMPO_GEO_LON", "-51.49012"))
+CAMPO_GEO_RUMO_GRAUS = float(os.environ.get("ROVER_CAMPO_GEO_RUMO_GRAUS", "70"))
+# "1": X cresce para a esquerda de quem anda na carreira (padrão: direita).
+CAMPO_GEO_ESPELHAR   = os.environ.get("ROVER_CAMPO_GEO_ESPELHAR", "0") == "1"
+CAMPO_GEO_APROXIMADO = os.environ.get("ROVER_CAMPO_GEO_APROXIMADO", "1") == "1"
+# Fuso do relógio do Pi (Brasília, sem horário de verão desde 2019).
+CAMPO_FUSO_HORAS     = float(os.environ.get("ROVER_CAMPO_FUSO_HORAS", "-3"))
+
+# Movimento do rover na visão (estimado: não há odômetro). "serpentina" =
+# carreira 1 vai, 2 volta, 3 vai; "mesmo_sentido" = todas no mesmo sentido.
+CAMPO_TRAJETO = os.environ.get("ROVER_CAMPO_TRAJETO", "serpentina")
+# Duração de uma carreira quando ainda não há histórico para estimar.
+CAMPO_DURACAO_CARREIRA_PADRAO_S = float(os.environ.get("ROVER_CAMPO_DURACAO_CARREIRA_PADRAO_S", "20"))
+
 # Servidor da visão 3D (servidor_visao.py): só leitura, rede local.
 # 0.0.0.0 = qualquer aparelho da mesma rede vê (hotspot do Pi ou Wi-Fi da
 # fazenda). Para só a própria máquina: ROVER_VISAO_HOST=127.0.0.1.

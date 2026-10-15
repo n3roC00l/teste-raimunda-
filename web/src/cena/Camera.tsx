@@ -23,6 +23,7 @@ import type { Snapshot } from "../tipos";
 
 const POLAR_TRABALHO = 0.82; // ~47° do zênite
 const POLAR_TUDO = 0.42; // ~24° do zênite
+const POLAR_ENTORNO = 0.78; // ~45°: a FAPA em perspectiva
 const MEIA_JANELA_M = 16; // vista de trabalho: 16 m para cada lado do rover
 // faixa da tela coberta pelos cartões de cima e pela legenda de baixo
 const COBERTO_TOPO = 0.17;
@@ -89,11 +90,16 @@ export default function Camera({ snap }: { snap: Snapshot }) {
     c.touches.three = A.TOUCH_ROTATE;
     c.dollyToCursor = true;
     c.minDistance = 2.5;
-    c.maxDistance = Math.max(s.campo.comprimento_m, s.campo.largura_m) * 2.6;
+    c.maxDistance = Math.max(1400, Math.max(s.campo.comprimento_m, s.campo.largura_m) * 2.6);
     c.maxPolarAngle = 1.3;
     c.smoothTime = 0.35;
+    // ?vista=fapa | campo abre em outra vista (ex.: TV de apresentação)
+    const vista = new URLSearchParams(location.search).get("vista");
     const trabalho = caixaTrabalho(s);
-    if (trabalho) enquadrar(c, noMundo(s.campo, trabalho), POLAR_TRABALHO, 0, false);
+    if (vista === "fapa") {
+      const [cx, , cz] = caixaCampo(s.campo);
+      enquadrar(c, noMundo(s.campo, [cx, 0, cz, 560, 1, 560]), POLAR_ENTORNO, 0, false);
+    } else if (trabalho && vista !== "campo") enquadrar(c, noMundo(s.campo, trabalho), POLAR_TRABALHO, 0, false);
     else enquadrar(c, noMundo(s.campo, caixaCampo(s.campo)), POLAR_TUDO, 0, false);
   }, [chaveCampo]);
 
@@ -106,6 +112,10 @@ export default function Camera({ snap }: { snap: Snapshot }) {
     const idx = montarIndice(s);
     if (pedido.alvo === "tudo") {
       enquadrar(c, noMundo(s.campo, caixaCampo(s.campo)), POLAR_TUDO, 0, true);
+    } else if (pedido.alvo === "entorno") {
+      // o ensaio no meio da FAPA: ~560 m em volta
+      const [cx, , cz] = caixaCampo(s.campo);
+      enquadrar(c, noMundo(s.campo, [cx, 0, cz, 560, 1, 560]), POLAR_ENTORNO, 0, true);
     } else if (pedido.alvo === "rover") {
       const trabalho = caixaTrabalho(s);
       if (trabalho) enquadrar(c, noMundo(s.campo, trabalho), POLAR_TRABALHO, 0, true);

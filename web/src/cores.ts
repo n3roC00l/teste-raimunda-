@@ -23,9 +23,9 @@ export const COR = {
   atencao: "#d9a441",
   critico: "#d96a5b",
   // cena
-  chao: "#151515",
-  plot: "#232323",
-  pendente: "#2e2e2e",
+  chao: "#29231d", // solo da área do ensaio
+  plot: "#332b24",
+  pendente: "#3d352d",
   analisada: "#555555",
   capturandoNeutra: "#3d3d3d",
   roverCorpo: "#d4d4d4",

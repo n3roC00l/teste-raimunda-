@@ -1,36 +1,47 @@
 import { Canvas } from "@react-three/fiber";
-import { COR } from "../cores";
 import { deslocamento } from "../geometria";
 import { useEstado } from "../store";
 import Camera from "./Camera";
 import Campo3D from "./Campo3D";
+import Ceu from "./Ceu";
+import Efeitos from "./Efeitos";
+import Entorno from "./Entorno";
+import Plantulas from "./Plantulas";
 import Rotulos from "./Rotulos";
-import Rover from "./Rover";
+import Rover, { CarreiraAtual } from "./Rover";
+import Vida from "./Vida";
 
-// frameloop "demand": só desenha quando algo muda (dado novo, câmera, pulso
-// da captura). Parado, a tela não gasta bateria. `flat`: sem tone mapping,
-// para as cores dos dados saírem iguais aos tokens validados.
+// A cena roda o tempo todo ("always"): rover andando, cenário vivo, sol
+// andando. Com a animação pausada (botão, ou o sistema pedindo menos
+// movimento), volta ao "demand": só redesenha quando chega dado novo.
+// `flat`: sem tone mapping, para as cores dos dados saírem iguais aos tokens.
+// Profundidade logarítmica: o entorno vai a ~1,5 km sem "briga" entre camadas.
 
 export default function Cena() {
   const snap = useEstado((e) => e.snap);
+  const animacao = useEstado((e) => e.animacao);
   const selecionar = useEstado((e) => e.selecionar);
   if (!snap) return null;
   const [dx, dz] = deslocamento(snap.campo);
   return (
     <Canvas
       className="cena"
-      frameloop="demand"
+      frameloop={animacao ? "always" : "demand"}
       flat
       dpr={[1, 2]}
-      camera={{ fov: 35, near: 0.1, far: 5000, position: [0, 90, 110] }}
+      gl={{ logarithmicDepthBuffer: true, antialias: true }}
+      camera={{ fov: 35, near: 0.5, far: 6000, position: [0, 90, 110] }}
       onPointerMissed={() => selecionar(null)}
     >
-      <color attach="background" args={[COR.fundo]} />
-      <hemisphereLight args={["#f2f2ee", "#2a2a28", 2.2]} />
-      <directionalLight position={[60, 120, 80]} intensity={1.6} />
+      <Ceu snap={snap} />
       <group position={[dx, 0, dz]}>
+        <Entorno campo={snap.campo} />
         <Campo3D snap={snap} />
+        <CarreiraAtual snap={snap} />
+        <Plantulas snap={snap} />
         <Rover snap={snap} />
+        <Vida campo={snap.campo} />
+        <Efeitos snap={snap} />
         <Rotulos snap={snap} />
       </group>
       <Camera snap={snap} />

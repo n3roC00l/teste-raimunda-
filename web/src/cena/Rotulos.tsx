@@ -27,16 +27,20 @@ function Contorno({ caixa, cor }: { caixa: Caixa; cor: string }) {
 // Rótulos ao longo do comprimento ficam a ~7 m um do outro: sempre visíveis.
 // Os da largura ficam a ~1,5 m: só aparecem de perto, para não se embolarem.
 const DISTANCIA_ROTULOS_LARGURA = 45;
+const DISTANCIA_ROTULOS_COMPRIMENTO = 240;
 
 function Eixos({ snap }: { snap: Snapshot }) {
   const campo = snap.campo;
   const controles = useThree((s) => s.controls) as unknown as { distance?: number } | null;
   const [perto, setPerto] = useState(false);
+  const [medio, setMedio] = useState(true);
   useFrame(() => {
     const d = controles?.distance;
     if (d === undefined) return;
-    const agora = d < DISTANCIA_ROTULOS_LARGURA;
-    if (agora !== perto) setPerto(agora);
+    const p = d < DISTANCIA_ROTULOS_LARGURA;
+    const m = d < DISTANCIA_ROTULOS_COMPRIMENTO;
+    if (p !== perto) setPerto(p);
+    if (m !== medio) setMedio(m);
   });
 
   const [comprimento, largura] = useMemo(() => {
@@ -59,7 +63,7 @@ function Eixos({ snap }: { snap: Snapshot }) {
 
   return (
     <>
-      {[...comprimento, ...(perto ? largura : [])].map(([chave, [x, z]]) => (
+      {[...(medio ? comprimento : []), ...(perto ? largura : [])].map(([chave, [x, z]]) => (
         <Html key={chave} position={[x, 0.05, z]} center className="rotulo-eixo" zIndexRange={[10, 0]}>
           {chave.split("@")[0]}
         </Html>

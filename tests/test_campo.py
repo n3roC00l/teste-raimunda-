@@ -425,3 +425,76 @@ def test_telemetria_nunca_levanta():
     t = campo.telemetria()
     assert set(t) == {"cpu_temp_c", "disco_livre_gb", "processos"}
     assert set(t["processos"]) == {"painel", "analisador", "capturador"}
+
+
+# --- movimento estimado do rover (sem odômetro) ------------------------------
+def _carreiras_capturadas(fontes):
+    """Três carreiras de 30, 30 e 105 s; a atual (X1Y1L3) começou às 09:59:45."""
+    _evento(fontes.eventos, "2026-10-15 09:57:00", "captura_iniciada", parcela="X9Y9L1")
+    _evento(fontes.eventos, "2026-10-15 09:57:30", "parcela_avancada", de="X9Y9L1", para="X9Y9L2")
+    _evento(fontes.eventos, "2026-10-15 09:58:00", "parcela_avancada", de="X9Y9L2", para="X9Y9L3")
+    _evento(fontes.eventos, "2026-10-15 09:59:45", "parcela_avancada", de="X9Y9L3", para="X1Y1L3")
+
+
+def test_movimento_estima_pelo_historico_de_carreiras(fontes):
+    _posicao(fontes.parcela, indice=0, linha=3)
+    _carreiras_capturadas(fontes)
+    m = _snap(fontes)["rover"]["movimento"]
+    assert m["inicio_carreira"] == "2026-10-15 09:59:45"
+    assert (m["duracao_tipica_s"], m["fonte_duracao"]) == (30.0, "histórico de carreiras")
+    assert m["idade_carreira_s"] == 15.0
+    assert m["progresso_estimado"] == 0.5                # 15 s de 30 s típicos
+    assert m["sentido"] == 1 and m["trajeto"] == "serpentina"
+    assert m["intervalo_captura_s"] == config.INTERVALO_CAPTURA_S
+
+
+def test_movimento_sem_historico_usa_fotos_e_depois_padrao(fontes):
+    _posicao(fontes.parcela, indice=0, linha=1)
+    _evento(fontes.eventos, "2026-10-15 09:59:50", "captura_iniciada", parcela="X1Y1L1")
+    m = _snap(fontes)["rover"]["movimento"]
+    assert m["fonte_duracao"] == "padrão (sem histórico)"
+    assert m["progresso_estimado"] == pytest.approx(10 / config.CAMPO_DURACAO_CARREIRA_PADRAO_S)
+    for linha in (1, 2, 3):                           # outras carreiras com 10 fotos
+        for seg in range(10):
+            _foto(fontes.csv, 2, 2, linha, 9, seg)
+    m = _snap(fontes)["rover"]["movimento"]
+    assert m["fonte_duracao"] == "fotos por carreira"
+    assert m["duracao_tipica_s"] == pytest.approx(10 * config.INTERVALO_CAPTURA_S)
+
+
+def test_movimento_parado_nao_tem_progresso(fontes):
+    _posicao(fontes.parcela, indice=0, linha=3)
+    _carreiras_capturadas(fontes)
+    _evento(fontes.eventos, "2026-10-15 09:59:55", "captura_parada", parcela="X1Y1L3")
+    m = _snap(fontes)["rover"]["movimento"]
+    assert m["progresso_estimado"] is None
+
+
+def test_movimento_ignora_pausa_longa(fontes):
+    _posicao(fontes.parcela, indice=0, linha=3)
+    _evento(fontes.eventos, "2026-10-15 07:00:00", "captura_iniciada", parcela="X9Y9L1")
+    _evento(fontes.eventos, "2026-10-15 09:00:00", "parcela_avancada", de="X9Y9L1", para="X9Y9L2")
+    _evento(fontes.eventos, "2026-10-15 09:00:20", "parcela_avancada", de="X9Y9L2", para="X1Y1L3")
+    m = _snap(fontes)["rover"]["movimento"]
+    assert m["fonte_duracao"] != "histórico de carreiras"   # só 1 carreira válida; 2 h não conta
+
+
+@pytest.mark.parametrize("trajeto,linha,sentido", [
+    ("serpentina", 1, 1), ("serpentina", 2, -1), ("serpentina", 3, 1), ("mesmo_sentido", 2, 1),
+])
+def test_sentido_da_carreira(fontes, monkeypatch, trajeto, linha, sentido):
+    monkeypatch.setattr(config, "CAMPO_TRAJETO", trajeto)
+    _posicao(fontes.parcela, indice=0, linha=linha)
+    assert _snap(fontes)["rover"]["movimento"]["sentido"] == sentido
+
+
+def test_sem_posicao_sem_movimento(fontes):
+    assert _snap(fontes)["rover"]["movimento"] is None
+
+
+def test_geo_do_campo_vem_de_config(fontes, monkeypatch):
+    monkeypatch.setattr(config, "CAMPO_GEO_RUMO_GRAUS", 160.0)
+    g = _snap(fontes)["campo"]["geo"]
+    assert (g["lat"], g["lon"]) == (config.CAMPO_GEO_LAT, config.CAMPO_GEO_LON)
+    assert g["rumo_graus"] == 160.0 and g["fuso_horas"] == config.CAMPO_FUSO_HORAS
+    assert g["aproximado"] is config.CAMPO_GEO_APROXIMADO
