@@ -5,6 +5,26 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `feat/servidor-visao`: servidor HTTP só leitura da visão 3D
+
+**Adicionado**
+- `servidor_visao.py` (stdlib, sem dependência nova): `GET /api/snapshot`
+  (gzip, `?experimento=`), `GET /api/foto/<nome>.jpg` (só de
+  `imagens_analisadas/`; nome validado, bloqueia `..` e link simbólico para
+  fora), e os estáticos do `web/dist` (sem build, uma página explicando).
+  Só `GET`/`HEAD` (o resto é 405); não escreve nada em disco. Um snapshot por
+  `VISAO_CACHE_S` para todos os clientes, com o `campo.Cache` incremental:
+  ~130 ms na primeira, <1 ms depois, ~19 KB com gzip (campanha inteira).
+  Loga só erros (o cliente consulta a cada 2 s).
+- `deploy/visao.service` (`Nice=10`, `Restart=on-failure`) e
+  `deploy/install.sh --visao` (opcional).
+- `config.py`: `VISAO_HOST`, `VISAO_PORTA`, `VISAO_WEB_DIR`, `VISAO_CACHE_S`.
+- `tests/test_servidor_visao.py` (24): rotas, gzip, cache, travessia de
+  diretório, métodos, "não escreve nada".
+
+**Comportamento:** nada muda no rover; o servidor é opcional e só lê.
+Suite: 162 casos.
+
 ### `feat/campo-snapshot`: snapshot do ensaio para a visão 3D
 
 **Adicionado**

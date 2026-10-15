@@ -109,6 +109,25 @@ desde a última chamada (e relê a planilha só quando ela muda). Medido numa
 campanha inteira (216 plots, ~9,7 mil fotos): ~100 ms sem cache, ~13 ms com
 cache. JSON compacto ~330 KB, ~18 KB com gzip.
 
+## O servidor (`servidor_visao.py`)
+
+```bash
+python servidor_visao.py                 # 0.0.0.0:8080; mostra os endereços
+python servidor_visao.py --host 127.0.0.1 --porta 8765 --sem-telemetria
+```
+
+| Rota | Resposta |
+|---|---|
+| `GET /api/snapshot[?experimento=NOME]` | o snapshot (gzip se o cliente aceitar; `no-store`) |
+| `GET /api/foto/<nome>.jpg` | foto de `imagens_analisadas/` (nome validado; nada fora da pasta) |
+| `GET /`, `/assets/...` | a visão compilada (`web/dist`); sem build, uma página explicando |
+| qualquer outro método | `405` (só `GET`/`HEAD`) |
+
+Um snapshot por `VISAO_CACHE_S` (1 s) para todos os clientes juntos. Medido
+com a campanha inteira: primeira resposta ~130 ms, depois <1 ms, ~19 KB com
+gzip. Não escreve nada em disco (há teste para isso). No Pi:
+`./deploy/install.sh --visao` (ver `deploy/README.md`).
+
 ## Limitações conhecidas
 
 - **Contagem = soma das fotos.** Fotos sobrepostas podem contar a mesma planta
@@ -121,13 +140,15 @@ cache. JSON compacto ~330 KB, ~18 KB com gzip.
   boot).
 - **Leitura incremental** não suporta quebra de linha dentro de um campo do CSV
   (o painel não gera isso).
+- **Servidor sem senha** nesta versão: qualquer aparelho na mesma rede vê
+  contagens e fotos. Para restringir: `ROVER_VISAO_HOST=127.0.0.1`.
 
 ## Roadmap
 
 | PR | Entrega | Situação |
 |---|---|---|
 | `feat/campo-snapshot` | `core/campo.py` + testes + CLI | feito |
-| `feat/servidor-visao` | servidor HTTP só leitura + `deploy/visao.service` | a fazer |
+| `feat/servidor-visao` | servidor HTTP só leitura + `deploy/visao.service` | feito |
 | `feat/web-gemeo-v0` | cena 3D: grade, rover, clique → painel; modo DEMO | a fazer |
 | `feat/web-gemeo-v1` | KPIs, linha do tempo, replay, zoom semântico, fotos | a fazer |
 | `feat/exportar-gemeo` | HTML autossuficiente (escritório, estande) | a fazer |

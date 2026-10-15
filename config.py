@@ -181,6 +181,15 @@ CAMPO_DISCO_CRITICO_GB   = float(os.environ.get("ROVER_CAMPO_DISCO_CRITICO_GB", 
 # Quantos eventos recentes vão no snapshot (linha do tempo da visão).
 CAMPO_EVENTOS_LIMITE = int(os.environ.get("ROVER_CAMPO_EVENTOS_LIMITE", "200"))
 
+# Servidor da visão 3D (servidor_visao.py): só leitura, rede local.
+# 0.0.0.0 = qualquer aparelho da mesma rede vê (hotspot do Pi ou Wi-Fi da
+# fazenda). Para só a própria máquina: ROVER_VISAO_HOST=127.0.0.1.
+VISAO_HOST    = os.environ.get("ROVER_VISAO_HOST", "0.0.0.0")
+VISAO_PORTA   = int(os.environ.get("ROVER_VISAO_PORTA", "8080"))
+VISAO_WEB_DIR = os.environ.get("ROVER_VISAO_WEB_DIR", os.path.join(BASE_DIR, "web", "dist"))
+# Snapshot reaproveitado por até este tempo, para todos os clientes juntos.
+VISAO_CACHE_S = float(os.environ.get("ROVER_VISAO_CACHE_S", "1.0"))
+
 
 # --------------------------------------------------------------------------
 # Helpers
