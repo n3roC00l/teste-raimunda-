@@ -45,6 +45,27 @@ journalctl --user -u rover.service -f       # logs ao vivo
 > boot (`raspi-config` → *System* → *Boot / Auto Login* → *Desktop
 > Autologin*). Sem isso não há display para o painel.
 
+## Visão 3D do ensaio (opcional)
+
+`visao.service` sobe o [`../servidor_visao.py`](../servidor_visao.py): um
+servidor HTTP **só leitura** na porta 8080 com o snapshot do ensaio e, se o
+`web/dist` estiver compilado, a tela 3D. Qualquer aparelho na mesma rede
+(hotspot do Pi ou Wi-Fi da fazenda) abre `http://<nome-do-pi>.local:8080`.
+
+```bash
+./deploy/install.sh --visao               # instala rover.service + visao.service
+journalctl --user -u visao.service -f      # mostra os endereços ao subir
+```
+
+- Roda com `Nice=10`: nunca disputa CPU com o YOLO. Só trabalha quando alguém
+  está olhando (no máximo um snapshot por segundo para todos os clientes).
+- Não tem rota de comando nem escreve nada em disco.
+- **Sem senha nesta versão.** Na rede da fazenda, qualquer um na mesma rede vê
+  as contagens e as fotos. Para limitar à própria máquina:
+  `Environment=ROVER_VISAO_HOST=127.0.0.1` no unit.
+
+Detalhes em [`../docs/GEMEO-3D.md`](../docs/GEMEO-3D.md).
+
 ## (c) — retomar a campanha
 
 Já resolvido no código (nada a instalar):

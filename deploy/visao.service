@@ -1,0 +1,26 @@
+# visao.service: visão 3D do ensaio, só leitura, na rede local.
+#
+# Serviço de USUÁRIO do systemd. Opcional: instalar com
+#   ./deploy/install.sh --visao
+# Ver docs/GEMEO-3D.md e deploy/README.md.
+#
+# Ajuste os caminhos abaixo se o projeto ou o venv estiverem em outro lugar.
+
+[Unit]
+Description=Rover FAPA: visão 3D do ensaio (só leitura)
+
+[Service]
+Type=simple
+
+# --- caminhos (ajuste se necessário) ---
+WorkingDirectory=%h/Documentos/raimunda
+ExecStart=%h/Documentos/raimunda/venv/bin/python -u servidor_visao.py
+
+# prioridade baixa: nunca disputar CPU com o YOLO do analisador
+Nice=10
+
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
