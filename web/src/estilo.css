@@ -1,0 +1,670 @@
+/* Tokens do painel Tkinter (ui/tema.py): tema escuro, neutro por padrão,
+   roxo só para "agora", âmbar/vermelho só para alerta, sempre com rótulo. */
+:root {
+  --fundo: #1a1a1a;
+  --fundo2: #212121;
+  --linha: #2e2e2e;
+  --t1: #e7e7e7;
+  --t2: #9a9a9a;
+  --t3: #626262;
+  --acento: #a68cf5;
+  --ok: #57c08a;
+  --atencao: #d9a441;
+  --critico: #d96a5b;
+  --raio: 10px;
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#raiz {
+  margin: 0;
+  height: 100%;
+  background: var(--fundo);
+  color: var(--t1);
+}
+body {
+  overflow: hidden;
+}
+:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+}
+code {
+  font-family: ui-monospace, "DejaVu Sans Mono", monospace;
+}
+
+.app {
+  position: fixed;
+  inset: 0;
+}
+.cena {
+  position: absolute !important;
+  inset: 0;
+}
+
+/* ---------- layout: topo, palco (cena) e painel lateral ao lado ---------- */
+.app {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(290px, 27vw, 380px);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+}
+.topo {
+  grid-column: 1 / -1;
+}
+.palco {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--raio);
+  overflow: hidden;
+  border: 1px solid var(--linha);
+}
+.cena {
+  position: absolute !important;
+  inset: 0;
+}
+.cartao {
+  background: rgba(33, 33, 33, 0.93);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  backdrop-filter: blur(6px);
+}
+
+/* ---------- topo ---------- */
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 14px;
+  min-height: 48px;
+}
+.marca b {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+.marca span {
+  color: var(--t2);
+  font-size: 13px;
+  margin-left: 8px;
+}
+.seletor {
+  background: var(--fundo);
+  color: var(--t1);
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 13px;
+  max-width: 300px;
+}
+.experimento {
+  color: var(--t2);
+  font-size: 13px;
+}
+.espaco {
+  flex: 1;
+}
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--linha);
+  color: var(--t1);
+  white-space: nowrap;
+}
+.selo i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.selo.ok i {
+  background: var(--ok);
+}
+.selo.critico {
+  border-color: var(--critico);
+}
+.selo.critico i {
+  background: var(--critico);
+}
+.selo.acento {
+  border-color: var(--acento);
+}
+.selo.neutro {
+  color: var(--t2);
+}
+.faixa-demo {
+  background: #3a2f12;
+  border: 1px solid var(--atencao);
+  color: var(--t1);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* ---------- indicadores ---------- */
+.kpis {
+  z-index: 30; /* acima dos rótulos da cena (drei Html usa z-index 0 a 20) */
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  pointer-events: none;
+}
+.kpi {
+  flex: 1 1 140px;
+  max-width: 220px;
+  pointer-events: auto;
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kpi-rotulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--t2);
+}
+.kpi-valor {
+  font-size: 24px;
+  font-weight: 700;
+}
+.kpi-sub {
+  font-size: 12px;
+  color: var(--t2);
+}
+.kpi-barra {
+  display: block;
+  height: 4px;
+  margin-top: 6px;
+  background: var(--linha);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.kpi-barra i {
+  display: block;
+  height: 100%;
+  background: var(--t2);
+}
+
+/* ---------- peças comuns ---------- */
+.icone-alerta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #1a1a1a;
+  line-height: 1;
+}
+.icone-alerta.atencao {
+  background: var(--atencao);
+}
+.icone-alerta.critico {
+  background: var(--critico);
+}
+.pilula {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--linha);
+  color: var(--t1);
+  white-space: nowrap;
+}
+.pilula::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--t3);
+}
+.pilula.ok::before {
+  background: var(--ok);
+}
+.pilula.atencao::before {
+  background: var(--atencao);
+}
+.pilula.critico::before {
+  background: var(--critico);
+}
+.pilula.acento {
+  border-color: var(--acento);
+}
+.pilula.acento::before {
+  background: var(--acento);
+}
+.discreto {
+  color: var(--t3);
+  font-size: 12px;
+}
+.botoes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.botao {
+  background: #2c2c2c;
+  color: var(--t1);
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-height: 36px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.botao:hover {
+  background: #3a3a3a;
+}
+
+/* ---------- painel lateral ---------- */
+.lateral {
+  overflow-y: auto;
+  padding: 14px;
+  min-height: 0;
+}
+.lateral h2 {
+  font-size: 17px;
+  margin: 0;
+}
+.lateral h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--t2);
+  margin: 0 0 6px;
+}
+.lateral-cabeca {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.pilulas {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.identificador {
+  font-family: ui-monospace, "DejaVu Sans Mono", monospace;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--acento);
+  margin: 2px 0 8px;
+}
+.linha-kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--linha);
+  font-size: 13px;
+}
+.kv-rotulo {
+  color: var(--t2);
+}
+.kv-valor {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.bloco {
+  margin-top: 16px;
+}
+.foto {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--linha);
+  margin-bottom: 6px;
+}
+.foto.vazia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fundo);
+  color: var(--t3);
+  font-size: 12px;
+}
+.item-alerta {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 13px;
+  padding: 6px 0;
+}
+.lista-alertas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.lista-alertas button {
+  all: unset;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--linha);
+  font-size: 13px;
+  cursor: pointer;
+}
+.lista-alertas button:hover,
+.lista-alertas button:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+}
+.lista-alertas span {
+  color: var(--t2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 12px;
+}
+.tabela th {
+  text-align: left;
+  color: var(--t2);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--linha);
+  padding: 4px;
+}
+.tabela td {
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--linha);
+  font-variant-numeric: tabular-nums;
+}
+.tabela tr.clicavel {
+  cursor: pointer;
+}
+.tabela tr.clicavel:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.ponto-acento {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--acento);
+  margin-left: 4px;
+}
+.linhagem {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+.linhagem li {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 4px 0 4px 20px;
+  font-size: 13px;
+  color: var(--t3);
+}
+.linhagem li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--t3);
+}
+.linhagem li.feita {
+  color: var(--t1);
+}
+.linhagem li.feita::before {
+  background: var(--t2);
+  border-color: var(--t2);
+}
+.etapa-rotulo {
+  min-width: 78px;
+}
+.etapa-quando {
+  font-variant-numeric: tabular-nums;
+}
+.nota {
+  font-size: 11px;
+  color: var(--t3);
+  margin: 18px 0 0;
+  line-height: 1.45;
+}
+
+/* ---------- rodapé: legenda, controles, eventos ---------- */
+.rodape {
+  z-index: 30;
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  pointer-events: none;
+}
+.rodape > * {
+  pointer-events: auto;
+}
+.controles {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 10px 12px;
+  max-width: 360px;
+}
+.controles .botoes {
+  margin-top: 0;
+}
+.alternador {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.alternador button {
+  background: transparent;
+  color: var(--t2);
+  border: 0;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.alternador button.ativo {
+  background: #3a3a3a;
+  color: var(--t1);
+}
+.legenda {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 12px;
+  color: var(--t2);
+}
+.legenda li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.amostra {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.amostra.pino {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.ajuda {
+  margin: 0;
+  font-size: 11px;
+  color: var(--t3);
+}
+.linha-tempo {
+  list-style: none;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--t2);
+  min-width: 0;
+  max-width: 520px;
+}
+.linha-tempo li {
+  padding: 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.linha-tempo li.erro {
+  color: var(--t1);
+}
+.linha-tempo li.erro::before {
+  content: "!";
+  display: inline-block;
+  width: 14px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--critico);
+  color: #1a1a1a;
+  text-align: center;
+  font-weight: 800;
+  font-size: 10px;
+}
+.ev-hora {
+  color: var(--t3);
+  margin-right: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- rótulos dentro da cena (drei Html) ---------- */
+.rotulo-eixo {
+  color: var(--t3);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+.dica {
+  background: rgba(18, 18, 18, 0.95);
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--t1);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.dica-alerta {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--t2);
+}
+.dica-alerta::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.dica-alerta.atencao::before {
+  background: var(--atencao);
+}
+.dica-alerta.critico::before {
+  background: var(--critico);
+}
+
+/* ---------- espera / erro de conexão ---------- */
+.espera {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+}
+.espera h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ---------- tela estreita: painel embaixo da cena ---------- */
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 38vh);
+    gap: 8px;
+    padding: 8px;
+  }
+  .kpi {
+    flex-basis: 120px;
+  }
+  .kpi-valor {
+    font-size: 20px;
+  }
+  .marca span,
+  .linha-tempo,
+  .ajuda {
+    display: none;
+  }
+  .botao,
+  .alternador button {
+    min-height: 44px;
+  }
+}

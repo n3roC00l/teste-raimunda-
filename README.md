@@ -42,6 +42,8 @@ flowchart LR
 | `core/registro.py` | CSV canônico de análise (colunas *tidy*, uma variável por coluna). |
 | `core/campo.py` | Snapshot do ensaio para a visão 3D (só leitura). Ver [`docs/GEMEO-3D.md`](docs/GEMEO-3D.md). |
 | `servidor_visao.py` | Servidor HTTP só leitura da visão 3D na rede local (`deploy/visao.service`, opcional). |
+| `web/` | A visão 3D (React Three Fiber). Compilar na máquina de desenvolvimento; o Pi recebe o `web/dist/`. Ver [`web/README.md`](web/README.md). |
+| `ferramentas/` | `demo_campanha.py` (campanha sintética, marcada DEMO) e `rodar_demo.sh` (demo completa da visão 3D). |
 | `core/export.py` · `exportar_planilha.py` | Preenche as colunas `linha 1/2/3` da planilha da semeadora com a contagem corrigida. |
 | `deploy/` | `rover.service` + `install.sh` — sobe no boot e reinicia se cair (ver `deploy/README.md`). |
 | `sincronizar_nuvem.py` | `rclone copy` das imagens e do CSV para o remote configurado. |

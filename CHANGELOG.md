@@ -5,6 +5,36 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `feat/web-gemeo-v0`: a visão 3D do ensaio
+
+**Adicionado**
+- `web/` (React 19 + TypeScript + Vite + React Three Fiber + drei + zustand):
+  o campo em escala real a partir da planilha (plots, 3 carreiras, passagens),
+  rover low-poly na carreira atual (pulsa capturando), pinos 3D nos plots em
+  alerta, rótulos X/Y, dica ao passar o ponteiro, seleção de plot/carreira com
+  contorno. Modos de cor *Estado* e *Emergência* (rampa de 6 faixas validada
+  para daltonismo). Câmera de mapa com vista de trabalho em volta do rover e
+  enquadramento calculado (o `fitToBox` perdia a inclinação); dado novo nunca
+  mexe na câmera. `frameloop="demand"`: parada, a tela não redesenha.
+- Interface: barra com selo ao vivo/sem conexão e faixa DEMONSTRAÇÃO,
+  indicadores, painel lateral (rover, plot, carreira com linhagem), legenda,
+  linha do tempo. Layout responsivo (painel embaixo em tela estreita).
+- `ferramentas/demo_campanha.py`: campanha **sintética** (planilha genérica
+  12 x 18, mancha de emergência baixa, carreira zerada, dupla contagem) com o
+  marcador `DEMO`; snapshot estático para `?demo` ou gravação ao vivo. Recusa
+  pasta que tenha dados sem o marcador.
+- `ferramentas/rodar_demo.sh`: demo completa (campanha ao vivo + servidor).
+- `web/README.md`, `docs/screenshots/gemeo-v0-*.png`, seção "A tela" no
+  `docs/GEMEO-3D.md`. `tests/test_demo_campanha.py` (3).
+
+**Alterado**
+- `core/campo.py`: alertas do rover e da saúde ganham `codigo` (analisador_erro,
+  analise_parada, fila, disco, backup), para a tela não depender do texto.
+  Aditivo: schema continua 1.
+
+**Comportamento:** nada muda no rover. Suite: 165 casos. Build web:
+1,2 MB de JS (332 KB com gzip).
+
 ### `feat/servidor-visao`: servidor HTTP só leitura da visão 3D
 
 **Adicionado**
