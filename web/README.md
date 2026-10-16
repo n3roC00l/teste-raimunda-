@@ -21,11 +21,14 @@ não precisa de Node lá. O `servidor_visao.py` serve essa pasta.
 ## Ver funcionando sem o rover
 
 ```bash
-./ferramentas/rodar_demo.sh                    # da raiz do repo; abre em http://127.0.0.1:8765
+./ferramentas/rodar_demo.sh                           # da raiz do repo; abre em http://127.0.0.1:8765
+ROVER_DEMO_HOST=0.0.0.0 ./ferramentas/rodar_demo.sh   # idem, e abre também de um celular/tablet na rede
 ```
 
-Sobe uma campanha **sintética** gravando ao vivo (uma foto a cada 0,9 s) numa
-pasta temporária e o servidor. A tela mostra a faixa "DEMONSTRAÇÃO".
+Sobe uma campanha **sintética** gravando ao vivo (uma foto a cada 0,9 s) em
+`~/.cache/rover-demo` e o servidor. A tela mostra a faixa "DEMONSTRAÇÃO". Na
+demo não há fotos nem telemetria (o rover é simulado; a máquina que roda a
+demo não é o Pi), e o painel diz isso em vez de mostrar números desta máquina.
 
 Sem nem o Python: `corepack pnpm dev` e abra `http://localhost:5173/?demo`,
 que lê a foto estática `public/demo/snapshot.json` (gerada por

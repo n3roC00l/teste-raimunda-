@@ -182,8 +182,15 @@ gzip. Não escreve nada em disco (há teste para isso). No Pi:
   ensaio quase todo analisado (~50 mil plantas), 40 a 60 fps numa Intel Iris
   Xe (Chromium, 1800 x 1100). Falta medir num tablet.
 
+- **Linha do tempo:** cada carreira que fecha aparece com o resultado
+  ("X6Y7L3 fechada: 68 plantas · 76%", com marca de alerta); clicar no código
+  leva a câmera até ela. Os outros eventos (backup, erros) aparecem como estão.
+
 Como rodar: `web/README.md`. Demonstração completa sem o rover:
-`./ferramentas/rodar_demo.sh` (campanha sintética ao vivo + servidor).
+`./ferramentas/rodar_demo.sh` (campanha sintética ao vivo + servidor; com
+`ROVER_DEMO_HOST=0.0.0.0` abre também de outro aparelho na rede). Com o
+marcador `DEMO`, o snapshot sai sem telemetria: o disco e os processos da
+máquina da demo não são os do rover simulado.
 
 ## Limitações conhecidas
 

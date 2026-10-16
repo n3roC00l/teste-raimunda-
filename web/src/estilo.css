@@ -585,6 +585,33 @@ code {
   font-weight: 800;
   font-size: 10px;
 }
+.ev-carreira {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--t1);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ev-carreira:hover {
+  text-decoration: underline;
+}
+.ev-marca {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: 1px;
+}
+.ev-marca.atencao {
+  background: var(--atencao);
+}
+.ev-marca.critico {
+  background: var(--critico);
+  border-radius: 1px; /* forma diferente do âmbar: não depende só da cor */
+}
 .ev-hora {
   color: var(--t3);
   margin-right: 8px;

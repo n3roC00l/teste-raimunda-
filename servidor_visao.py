@@ -219,8 +219,14 @@ def criar_servidor(host, porta, visao):
     return servidor
 
 
-def _enderecos(porta):
-    """Endereços para mostrar ao operador (mDNS e IP da interface principal)."""
+def _enderecos(host, porta):
+    """Endereços para mostrar ao operador. Só lista os da rede (mDNS e IP da
+    interface principal) se o servidor atende na rede; preso a 127.0.0.1,
+    outro aparelho não abre, e mostrar o IP só confundiria."""
+    if host in ("127.0.0.1", "localhost", "::1") or host.startswith("127."):
+        return [f"http://127.0.0.1:{porta}  (só nesta máquina)"]
+    if host not in ("", "0.0.0.0", "::"):
+        return [f"http://{host}:{porta}"]
     enderecos = [f"http://{socket.gethostname()}.local:{porta}"]
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -242,7 +248,7 @@ def main(argv=None):
     visao = Visao(com_telemetria=not args.sem_telemetria)
     servidor = criar_servidor(args.host, args.porta, visao)
     print(f"VISAO: servindo em {args.host}:{servidor.server_address[1]} (só leitura)", flush=True)
-    for endereco in _enderecos(servidor.server_address[1]):
+    for endereco in _enderecos(args.host, servidor.server_address[1]):
         print(f"VISAO:   {endereco}", flush=True)
     if not visao.tem_build:
         print(f"VISAO: web/dist não encontrado em {visao.web_dir}: só a API responde.", flush=True)
