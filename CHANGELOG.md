@@ -5,6 +5,36 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `feat/web-gemeo-lavoura`: o ensaio desenhado como lavoura
+
+**Adicionado**
+- Modo *Lavoura* (padrão; `?modo=` escolhe outro): solo preparado com
+  camalhão. De perto, toda carreira analisada mostra as plântulas contadas
+  (quantidade exata, falhas espalhadas, posição ilustrativa) com vento em
+  rajadas no shader; de longe (> ~80 m), cada carreira vira um ladrilho na
+  rampa oliva → verde da emergência (validada: um tom, passos de L ≥ 0,06,
+  2,28:1 vs solo). As plântulas que brotam atrás do rover ocupam as mesmas
+  posições: nada pula de lugar quando ele segue adiante.
+- Alerta como forma: moldura em volta do plot (todos os modos), bandeirinha
+  na cabeceira da carreira que disparou (de perto), pino só de longe.
+- Estaca com plaquinha na cabeceira de cada plot (clicável) e vão de 12 cm
+  entre plots vizinhos: dá para ver onde um plot termina.
+- Risco em volta do ensaio; de longe, o nome do ensaio e um marcador do rover.
+
+**Mudado**
+- Lavouras vizinhas apagadas (cores puxadas para verde-acinzentado, quadras de
+  tamanhos variados): o cenário não compete mais com o ensaio.
+- Sombras de nuvem com borda suave; aves somem de longe (viravam pontinhos).
+- Rótulos dos eixos em pílula escura (legíveis sobre solo, grama ou ladrilho).
+- Nos modos Estado e Emergência, de longe a barra ocupa a carreira toda (sem
+  listras).
+
+**Corrigido**
+- Janelas dos prédios eram remontadas a cada snapshot (2 s) sem liberar a
+  geometria anterior, e enchiam o console de avisos.
+- Molduras e contorno não são mais recriados a cada snapshot (a linha trocava
+  geometria e material e causava engasgos).
+
 ### `feat/web-gemeo-vida`: cena viva (animação o tempo todo) no entorno da FAPA
 
 **Adicionado**

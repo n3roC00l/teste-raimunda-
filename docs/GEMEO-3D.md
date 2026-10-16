@@ -19,10 +19,15 @@ objetos que ninguém mede) vêm as regras abaixo.
 3. **Horário vem do arquivo** (CSV, `eventos.jsonl`) e nunca é recalculado.
    "Agora" só entra nas idades (`idade_*_s`).
 4. **Só o medido.** Não há odômetro/GPS nem as caixas do YOLO gravadas: não
-   existe posição ao longo da carreira nem posição de planta. Se algum dia a
-   visão desenhar plantas, elas vêm rotuladas como ilustração.
-5. **Cor só em exceção** (frente #6 do `MELHORIAS.md`): neutro por padrão,
-   âmbar/vermelho só acima dos limiares escritos em `config.py`.
+   existe posição ao longo da carreira nem posição de planta. A posição do
+   rover é ESTIMADA e as plantas desenhadas têm a QUANTIDADE contada e posição
+   ilustrativa; a legenda diz as duas coisas. Cenário (carros, nuvens, aves,
+   lavouras vizinhas) também vem rotulado.
+5. **Status só em exceção** (frente #6 do `MELHORIAS.md`): âmbar/vermelho
+   são reservados a alerta, acima dos limiares escritos em `config.py`, e
+   alerta nunca é só cor (moldura, bandeirinha, pino, texto). O verde do modo
+   Lavoura é a lavoura desenhada (a densidade é o dado), não um status; o modo
+   Estado continua neutro como o painel Tkinter.
 6. **Só leitura.** A visão não comanda o rover. Operar continua sendo no
    painel Tkinter.
 
@@ -130,28 +135,52 @@ gzip. Não escreve nada em disco (há teste para isso). No Pi:
 
 ## A tela (`web/`)
 
-![modo estado](screenshots/gemeo-v0-estado.png)
-![modo emergência](screenshots/gemeo-v0-emergencia.png)
+![modo lavoura, vista de trabalho](screenshots/gemeo-lavoura-trabalho.png)
+![modo lavoura, campo todo](screenshots/gemeo-lavoura-campo.png)
+![vista da FAPA](screenshots/gemeo-lavoura-fapa.png)
 
 *(capturas da campanha sintética de demonstração, não de dados reais)*
 
-- **Cena:** o campo em escala real, a partir da planilha. Carreira com dado
-  fica mais alta, e com alerta mais alta ainda. Plot em alerta ganha um pino 3D,
-  para o alerta nunca depender só de cor. O rover fica no começo da carreira
-  em que o painel diz que ele está, porque a posição ao longo dela não é medida;
-  a carreira inteira acende, e pulsa enquanto captura.
-- **Dois modos de cor:** *Estado* (neutro; roxo = capturando; âmbar/vermelho =
-  alerta) e *Emergência* (rampa azul de 6 faixas, cortes de alerta vindos de
-  `config.py`). Cores validadas para daltonismo e contraste contra o fundo.
-- **Câmera:** abre numa vista de trabalho oblíqua em volta do rover; "ver o
-  campo todo" olha mais de cima (o ensaio é uma tira de 125 x 18 m). Chegar
-  dado novo nunca mexe na câmera.
+- **Cena:** o campo em escala real, a partir da planilha, no meio do entorno
+  da FAPA (OpenStreetMap). Uma estaca com plaquinha na cabeceira de cada plot
+  (clicada, seleciona o plot) e um risco claro em volta do ensaio.
+- **Três modos** (`?modo=lavoura|emergencia|estado`):
+  - *Lavoura* (padrão): solo preparado com camalhão; o ensaio "verdeja"
+    conforme o rover analisa. **De perto**, cada carreira analisada mostra as
+    plântulas contadas: a quantidade é exata e as falhas são as sementes que
+    não emergiram (posição ilustrativa). **De longe** (mais de ~80 m, como o
+    "Campo todo"), cada carreira vira um ladrilho na rampa oliva → verde da
+    emergência; uma planta ali teria menos de um pixel e as carreiras virariam
+    listras.
+  - *Emergência*: barras na rampa azul de 6 faixas (para análise fina).
+  - *Estado*: neutro como o painel (roxo = capturando).
+- **Alerta é forma, não só cor:** moldura âmbar/vermelha em volta do plot
+  (no carreador, nunca encostada no ladrilho), bandeirinha na cabeceira da
+  carreira que disparou (de perto) e pino (de longe). No modo Lavoura as
+  falhas que causaram o alerta continuam visíveis dentro da moldura.
+- **Cores validadas** (`validate_palette`): a rampa da Lavoura é um tom só
+  (35°), com passos de luminosidade ≥ 0,06 e a ponta escura a 2,28:1 do solo.
+  Âmbar e vermelho se confundem com o meio dela para daltônicos, e é por isso
+  que o alerta é forma.
+- **Vida:** o rover anda na carreira em posição estimada, manobra em U nas
+  cabeceiras e as plântulas brotam atrás dele; o vento passa pela lavoura em
+  rajadas (shader). Carros na PR-540, sombras de nuvem e aves são cenário.
+- **De muito longe** (vista da FAPA): o nome do ensaio e um marcador do rover.
+  As lavouras vizinhas são apagadas de propósito, para nenhuma quadra parecer
+  mais "ensaio" que o ensaio.
+- **Câmera:** abre numa vista de trabalho oblíqua em volta do rover; "Campo
+  todo" olha mais de cima; "Ver a FAPA" mostra o entorno. Dado novo nunca mexe
+  na câmera.
 - **Painel lateral:** rover (posição, última foto, sistema, alertas), plot
   (tabela das 3 carreiras) ou carreira (linhagem com horários gravados).
   A lista de plots em alerta é a "tabela" acessível do mapa.
 - **Honestidade:** selo "ao vivo" só com resposta recente; "sem conexão" mostra
   há quanto tempo; DEMONSTRAÇÃO sempre visível com dado sintético; a nota sobre
   o que a contagem significa fica no rodapé do painel.
+- **Desempenho:** plantas com 6 triângulos, uma malha por coluna de plots
+  (o que sai do quadro é descartado) e refeita só na coluna que mudou. Com o
+  ensaio quase todo analisado (~50 mil plantas), 40 a 60 fps numa Intel Iris
+  Xe (Chromium, 1800 x 1100). Falta medir num tablet.
 
 Como rodar: `web/README.md`. Demonstração completa sem o rover:
 `./ferramentas/rodar_demo.sh` (campanha sintética ao vivo + servidor).
@@ -179,6 +208,7 @@ Como rodar: `web/README.md`. Demonstração completa sem o rover:
 | `feat/servidor-visao` | servidor HTTP só leitura + `deploy/visao.service` | feito |
 | `feat/web-gemeo-v0` | cena 3D: grade, rover, clique → painel; modo DEMO | feito |
 | `feat/web-gemeo-vida` | cena viva: rover estimado, plântulas, efeitos, dia/noite, entorno da FAPA | feito |
+| `feat/web-gemeo-lavoura` | modo Lavoura (plantas de perto, ladrilhos de longe), alerta como forma, estacas, cenário apagado | feito |
 | `feat/web-gemeo-v1` | replay, tira de fotos | a fazer |
 | `feat/exportar-gemeo` | HTML autossuficiente (escritório, estande) | a fazer |
 | depois | caixas do YOLO em arquivo à parte, incerteza do RV-08, encoder na roda | conforme o campo |
