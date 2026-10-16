@@ -1,8 +1,9 @@
 import { type Ref, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import type { Group, Mesh, MeshBasicMaterial } from "three";
+import { CanvasTexture, type Group, type Mesh, type MeshBasicMaterial } from "three";
 import type { Campo } from "../tipos";
 import { ambiente, sorteador } from "./ambiente";
+import { DISTANCIA_LADRILHOS, useLonge } from "./lod";
 import { useEntorno, useProjecao } from "./useEntorno";
 
 // CENÁRIO DECORATIVO (não é dado): trânsito na PR-540 e nas vias do campus,
@@ -151,6 +152,20 @@ function SombrasDeNuvem({ centro }: { centro: XZ }) {
       giro: sorte() * 3,
     }));
   }, [centro]);
+  // borda suave (gradiente radial): sombra de nuvem não tem contorno
+  const textura = useMemo(() => {
+    const c = document.createElement("canvas");
+    c.width = c.height = 64;
+    const g = c.getContext("2d")!;
+    const r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    r.addColorStop(0, "rgba(255,255,255,1)");
+    r.addColorStop(0.4, "rgba(255,255,255,0.7)");
+    r.addColorStop(0.75, "rgba(255,255,255,0.22)");
+    r.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = r;
+    g.fillRect(0, 0, 64, 64);
+    return new CanvasTexture(c);
+  }, []);
   const refs = useRef<(Mesh | null)[]>([]);
   const mats = useRef<(MeshBasicMaterial | null)[]>([]);
   useFrame(({ clock }) => {
@@ -160,15 +175,15 @@ function SombrasDeNuvem({ centro }: { centro: XZ }) {
       const x = ((n.x - centro[0] + 700 + clock.elapsedTime * n.v) % 1400) - 700 + centro[0];
       m.position.set(x, -0.06, n.z + Math.sin(clock.elapsedTime * 0.02 + i) * 25);
       const mat = mats.current[i];
-      if (mat) mat.opacity = 0.16 * (1 - ambiente.noite);
+      if (mat) mat.opacity = 0.2 * (1 - ambiente.noite);
     });
   });
   return (
     <>
       {sombras.map((n, i) => (
         <mesh key={i} ref={(m) => void (refs.current[i] = m)} rotation={[-Math.PI / 2, 0, n.giro]} scale={[n.rx, n.rz, 1]} raycast={semEvento}>
-          <circleGeometry args={[1, 28]} />
-          <meshBasicMaterial ref={(m) => void (mats.current[i] = m)} color="#0e1a12" transparent opacity={0.16} depthWrite={false} />
+          <planeGeometry args={[2, 2]} />
+          <meshBasicMaterial ref={(m) => void (mats.current[i] = m)} color="#0e1a12" alphaMap={textura} transparent opacity={0.2} depthWrite={false} />
         </mesh>
       ))}
     </>
@@ -176,6 +191,8 @@ function SombrasDeNuvem({ centro }: { centro: XZ }) {
 }
 
 function Aves({ centro }: { centro: XZ }) {
+  // de longe, uma ave vira um pontinho preto que parece sujeira na tela
+  const longe = useLonge(DISTANCIA_LADRILHOS);
   const aves = useMemo(() => {
     const sorte = sorteador(9);
     return Array.from({ length: 7 }, () => ({ fase: sorte() * 6.28, raio: 26 + sorte() * 18, altura: 16 + sorte() * 10, w: 0.16 + sorte() * 0.05 }));
@@ -197,6 +214,7 @@ function Aves({ centro }: { centro: XZ }) {
       if (d) d.rotation.x = -bate;
     });
   });
+  if (longe) return null;
   return (
     <>
       {aves.map((_, i) => (

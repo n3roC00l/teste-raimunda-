@@ -541,10 +541,14 @@ code {
   border-radius: 2px;
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
-.amostra.pino {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.amostra.moldura {
+  background: transparent;
+  border: 2px solid;
+}
+.legenda .legenda-nota {
+  flex-basis: 100%;
+  color: var(--t3);
+  font-size: 11px;
 }
 .ajuda {
   margin: 0;
@@ -589,7 +593,11 @@ code {
 
 /* ---------- rótulos dentro da cena (drei Html) ---------- */
 .rotulo-eixo {
-  color: var(--t3);
+  /* sobre solo, grama ou ladrilho: pílula escura para ler em qualquer fundo */
+  color: var(--t1);
+  background: rgba(20, 20, 20, 0.55);
+  border-radius: 4px;
+  padding: 0 4px;
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
@@ -681,6 +689,48 @@ code {
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
+}
+.rotulo-ensaio {
+  color: #1d1636;
+  background: var(--acento);
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+.marcador-rover {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--t1);
+  background: rgba(20, 20, 20, 0.72);
+  border-radius: 999px;
+  padding: 2px 8px 2px 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+.marcador-rover i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--acento);
+  box-shadow: 0 0 0 3px rgba(166, 140, 245, 0.35);
+  animation: pulso-rover 1.6s ease-in-out infinite;
+}
+@keyframes pulso-rover {
+  50% {
+    box-shadow: 0 0 0 6px rgba(166, 140, 245, 0.08);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marcador-rover i {
+    animation: none;
+  }
 }
 .efeito {
   pointer-events: none;

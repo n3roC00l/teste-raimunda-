@@ -10,7 +10,7 @@ export type Selecao =
   | { tipo: "carreira"; id: string }
   | { tipo: "rover" }
   | null;
-export type ModoCor = "estado" | "emergencia";
+export type ModoCor = "lavoura" | "emergencia" | "estado";
 export type AlvoCamera = "tudo" | "rover" | "selecao" | "entorno";
 export type Luz = "real" | "dia";
 
@@ -42,6 +42,11 @@ interface Estado {
   setLuz: (luz: Luz) => void;
 }
 
+function modoDaUrl(): ModoCor {
+  const m = new URLSearchParams(location.search).get("modo");
+  return m === "emergencia" || m === "estado" ? m : "lavoura";
+}
+
 // quem pediu menos movimento no sistema começa com a animação pausada
 const menosMovimento = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -58,8 +63,8 @@ export const useEstado = create<Estado>((set) => ({
   experimento: null,
   selecao: null,
   hover: null,
-  // ?modo=emergencia abre já no mapa de emergência (ex.: tela de apresentação)
-  modoCor: new URLSearchParams(location.search).get("modo") === "emergencia" ? "emergencia" : "estado",
+  // ?modo=emergencia|estado abre já em outro modo (ex.: tela de apresentação)
+  modoCor: modoDaUrl(),
   pedidoCamera: { alvo: "tudo", n: 0 },
   animacao: !menosMovimento,
   luz: "real",

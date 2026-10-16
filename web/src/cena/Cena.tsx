@@ -5,7 +5,9 @@ import Camera from "./Camera";
 import Campo3D from "./Campo3D";
 import Ceu from "./Ceu";
 import Efeitos from "./Efeitos";
+import Ensaio from "./Ensaio";
 import Entorno from "./Entorno";
+import Lavoura from "./Lavoura";
 import Plantulas from "./Plantulas";
 import Rotulos from "./Rotulos";
 import Rover, { CarreiraAtual } from "./Rover";
@@ -37,6 +39,8 @@ export default function Cena() {
       <group position={[dx, 0, dz]}>
         <Entorno campo={snap.campo} />
         <Campo3D snap={snap} />
+        <Lavoura snap={snap} />
+        <Ensaio snap={snap} />
         <CarreiraAtual snap={snap} />
         <Plantulas snap={snap} />
         <Rover snap={snap} />

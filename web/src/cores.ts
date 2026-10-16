@@ -10,6 +10,16 @@ import type { ModoCor } from "./store";
 // - o roxo da captura NÃO convive com a rampa (ΔE 2,2 deutan): no modo
 //   emergência a carreira em captura fica neutra, com contorno pulsante.
 // Alerta nunca é só cor: tem pino 3D na cena e texto no painel.
+//
+// Modo Lavoura (padrão): o ensaio é desenhado como lavoura. Solo preparado
+// com camalhão; de perto, cada plântula contada aparece na carreira; de longe,
+// cada carreira analisada vira um ladrilho na RAMPA_LAVOURA (oliva -> verde,
+// como um mapa de vigor). Validada (--ordinal, contra o solo #45372a): um tom
+// só (35°), L monotônica com passos >= 0,06, ponta escura 2,28:1 vs solo.
+// Âmbar e vermelho se confundem com o meio da rampa para daltônicos (ΔE 2 a 5),
+// por isso, neste modo, o alerta é FORMA: moldura em volta do plot (no
+// carreador, sobre o solo, nunca encostada no ladrilho), bandeirinha na
+// cabeceira da carreira e pino de longe.
 
 export const COR = {
   fundo: "#1a1a1a",
@@ -28,11 +38,19 @@ export const COR = {
   pendente: "#3d352d",
   analisada: "#555555",
   capturandoNeutra: "#3d3d3d",
+  // lavoura: solo preparado (carreador mais claro que o plot, camalhão aceso pelo sol)
+  soloCarreador: "#5b4b3b",
+  soloPlot: "#45372a",
+  camalhao: "#6a5541",
+  semEsperado: "#8a8a80", // analisada, mas sem grãos na planilha: sem emergência
+  estaca: "#e9e4d6",
+  cerca: "#d8d2c4",
   roverCorpo: "#d4d4d4",
   roverRoda: "#1c1c1c",
 } as const;
 
 const RAMPA = ["#184f95", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4", "#cde2fb"];
+export const RAMPA_LAVOURA = ["#797035", "#89883a", "#95a143", "#9abb4f", "#9ed468", "#aae98b"];
 
 export interface Faixa {
   min: number;
@@ -45,20 +63,23 @@ const pct = (v: number) => `${Math.round(v * 100)}%`;
 
 /** Faixas da emergência. Os cortes de alerta vêm do snapshot (config.py),
  * para a legenda e o alerta nunca discordarem. */
-export function faixasEmergencia(l: Limiares): Faixa[] {
+export function faixasEmergencia(l: Limiares, rampa: string[] = RAMPA): Faixa[] {
   const cortes = [...new Set([l.emergencia_critico, l.emergencia_atencao, 0.8, 0.9, 1.0])]
     .filter((c) => c > 0)
     .sort((a, b) => a - b)
-    .slice(0, RAMPA.length - 1);
-  const passo = (RAMPA.length - 1) / cortes.length;
+    .slice(0, rampa.length - 1);
+  const passo = (rampa.length - 1) / cortes.length;
   const bordas = [0, ...cortes, Infinity];
   return bordas.slice(0, -1).map((min, i) => {
     const max = bordas[i + 1];
     const rotulo = i === 0 ? `abaixo de ${pct(max)}` : max === Infinity ? `${pct(min)} ou mais` : `${pct(min)} a ${pct(max)}`;
-    return { min, max, cor: RAMPA[Math.round(i * passo)], rotulo };
+    return { min, max, cor: rampa[Math.round(i * passo)], rotulo };
   });
 }
 
+const faixaDe = (e: number, faixas: Faixa[]) => (faixas.find((f) => e >= f.min && e < f.max) ?? faixas[faixas.length - 1]).cor;
+
+/** Cor da carreira nos modos Estado e Emergência (no Lavoura o camalhão é solo). */
 export function corCarreira(c: Carreira, modo: ModoCor, faixas: Faixa[]): string {
   if (c.estado === "pendente") return COR.pendente;
   if (c.estado === "capturando") return modo === "estado" ? COR.acento : COR.capturandoNeutra;
@@ -68,7 +89,14 @@ export function corCarreira(c: Carreira, modo: ModoCor, faixas: Faixa[]): string
     return COR.analisada;
   }
   if (c.emergencia === null) return COR.analisada; // sem grãos na planilha
-  return (faixas.find((f) => c.emergencia! >= f.min && c.emergencia! < f.max) ?? faixas[faixas.length - 1]).cor;
+  return faixaDe(c.emergencia, faixas);
+}
+
+/** Ladrilho de longe no modo Lavoura: só carreira analisada tem (o resto é solo). */
+export function corLadrilho(c: Carreira, faixas: Faixa[]): string | null {
+  if (c.estado !== "analisada") return null;
+  if (c.emergencia === null) return COR.semEsperado;
+  return faixaDe(c.emergencia, faixas);
 }
 
 export const corAlerta = (a: Carreira["alerta"]) => (a === "critico" ? COR.critico : a === "atencao" ? COR.atencao : COR.t2);

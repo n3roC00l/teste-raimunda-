@@ -1,27 +1,45 @@
 import { useMemo } from "react";
-import { COR, faixasEmergencia } from "../cores";
+import { COR, faixasEmergencia, RAMPA_LAVOURA } from "../cores";
 import { descreverEvento, ehErro, hora } from "../formato";
-import { useEstado } from "../store";
+import { type ModoCor, useEstado } from "../store";
 import type { Snapshot } from "../tipos";
 
 // Legenda (sempre presente), troca de modo de cor, câmera e os últimos
-// eventos. Alerta na legenda aparece com o pino: o mesmo sinal da cena.
+// eventos. Alerta na legenda aparece como moldura: o mesmo sinal da cena.
 
-function Amostra({ cor, rotulo, pino }: { cor: string; rotulo: string; pino?: boolean }) {
+function Amostra({ cor, rotulo, moldura }: { cor: string; rotulo: string; moldura?: boolean }) {
   return (
     <li>
-      <i className={pino ? "amostra pino" : "amostra"} style={{ background: cor }} />
+      <i className={moldura ? "amostra moldura" : "amostra"} style={moldura ? { borderColor: cor } : { background: cor }} />
       {rotulo}
     </li>
   );
 }
 
+const MODOS: { modo: ModoCor; rotulo: string }[] = [
+  { modo: "lavoura", rotulo: "Lavoura" },
+  { modo: "emergencia", rotulo: "Emergência" },
+  { modo: "estado", rotulo: "Estado" },
+];
+
 function Legenda({ snap }: { snap: Snapshot }) {
   const modo = useEstado((e) => e.modoCor);
   const faixas = useMemo(() => faixasEmergencia(snap.limiares), [snap.limiares]);
+  const faixasLavoura = useMemo(() => faixasEmergencia(snap.limiares, RAMPA_LAVOURA), [snap.limiares]);
+  const semEsperado = snap.campo.plots.some((p) => p.carreiras.some((k) => k.estado === "analisada" && k.emergencia === null));
   return (
     <ul className="legenda">
-      {modo === "estado" ? (
+      {modo === "lavoura" ? (
+        <>
+          <li className="legenda-nota">de perto, as plantas contadas; de longe, a emergência:</li>
+          {faixasLavoura.map((f) => (
+            <Amostra key={f.rotulo} cor={f.cor} rotulo={f.rotulo} />
+          ))}
+          {semEsperado && <Amostra cor={COR.semEsperado} rotulo="sem grãos na planilha" />}
+          <Amostra cor={COR.camalhao} rotulo="pendente (solo)" />
+          <Amostra cor={COR.acento} rotulo="capturando agora" />
+        </>
+      ) : modo === "estado" ? (
         <>
           <Amostra cor={COR.pendente} rotulo="pendente" />
           <Amostra cor={COR.analisada} rotulo="analisada" />
@@ -35,8 +53,8 @@ function Legenda({ snap }: { snap: Snapshot }) {
           <Amostra cor={COR.pendente} rotulo="pendente" />
         </>
       )}
-      <Amostra cor={COR.atencao} rotulo="atenção" pino />
-      <Amostra cor={COR.critico} rotulo="crítico" pino />
+      <Amostra cor={COR.atencao} rotulo="atenção" moldura />
+      <Amostra cor={COR.critico} rotulo="crítico" moldura />
     </ul>
   );
 }
@@ -77,13 +95,12 @@ export default function Rodape({ snap }: { snap: Snapshot }) {
   return (
     <footer className="rodape">
       <div className="controles cartao">
-        <div className="alternador" role="radiogroup" aria-label="Cor das carreiras">
-          <button role="radio" aria-checked={modo === "estado"} className={modo === "estado" ? "ativo" : ""} onClick={() => setModo("estado")}>
-            Estado
-          </button>
-          <button role="radio" aria-checked={modo === "emergencia"} className={modo === "emergencia" ? "ativo" : ""} onClick={() => setModo("emergencia")}>
-            Emergência
-          </button>
+        <div className="alternador" role="radiogroup" aria-label="Como desenhar as carreiras">
+          {MODOS.map((m) => (
+            <button key={m.modo} role="radio" aria-checked={modo === m.modo} className={modo === m.modo ? "ativo" : ""} onClick={() => setModo(m.modo)}>
+              {m.rotulo}
+            </button>
+          ))}
         </div>
         <Legenda snap={snap} />
         <div className="botoes">

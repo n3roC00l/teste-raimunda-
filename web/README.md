@@ -41,7 +41,8 @@ que lê a foto estática `public/demo/snapshot.json` (gerada por
 | Parâmetro | Efeito |
 |---|---|
 | `?demo` | usa `demo/snapshot.json` (estático), nunca o servidor |
-| `?modo=emergencia` | abre já no mapa de emergência (ex.: tela de apresentação) |
+| `?modo=emergencia` ou `?modo=estado` | abre em outro modo (o padrão é a Lavoura) |
+| `?vista=campo` ou `?vista=fapa` | abre no campo todo ou no entorno (ex.: TV de apresentação) |
 
 ## Organização
 
@@ -50,12 +51,13 @@ que lê a foto estática `public/demo/snapshot.json` (gerada por
 | `src/tipos.ts` | tipos do snapshot (espelho do `core/campo.py`, schema 1) |
 | `src/api.ts` | consulta a cada 2 s; modo demo só com `?demo` |
 | `src/store.ts` | estado (zustand): snapshot, conexão, seleção, modo de cor, pedidos de câmera |
-| `src/cores.ts` | tokens do painel (`ui/tema.py`) e a rampa da emergência, validados |
+| `src/cores.ts` | tokens do painel (`ui/tema.py`), rampas da emergência e da lavoura, validadas |
 | `src/geometria.ts` | plano do campo → cena (v ao longo das carreiras = eixo X) |
-| `src/cena/` | `Campo3D` (chão, plots, carreiras, pinos), `Rover`, `Rotulos`, `Camera` |
+| `src/cena/` | `Campo3D` (solo, plots, carreiras, estacas, alertas), `Lavoura` (plantas e ladrilhos), `Plantulas` (as que brotam), `Rover`, `Ensaio`, `Entorno`, `Vida`, `Rotulos`, `Camera` |
+| `src/cena/lod.ts` | nível de detalhe pela distância da câmera (plantas ↔ ladrilhos, marcadores) |
 | `src/ui/` | barra do topo, indicadores, painel lateral, legenda e linha do tempo |
 
-Cores: neutro por padrão; roxo (`#a68cf5`) só para a carreira em captura;
-âmbar/vermelho só para alerta, e alerta sempre com pino 3D e texto (nunca só
-cor). A rampa da emergência (6 tons de azul) foi validada para daltonismo e
-contraste contra o fundo `#1a1a1a`.
+Cores: roxo (`#a68cf5`) só para a carreira em captura; âmbar/vermelho só para
+alerta, e alerta sempre com forma (moldura, bandeirinha, pino) e texto, nunca
+só cor. A rampa da emergência (6 tons de azul) foi validada contra o fundo
+`#1a1a1a`; a da lavoura (oliva → verde, um tom só) contra o solo `#45372a`.

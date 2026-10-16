@@ -112,14 +112,16 @@ function dentro(x: number, z: number, pts: XZ[]): boolean {
 }
 
 // Lavouras vizinhas (CENÁRIO): a FAPA é cercada de lavoura, e no satélite isso
-// aparece como retalhos de cores. Quadras alinhadas ao ensaio, puladas onde
-// passam vias, prédios, mata ou o próprio ensaio.
+// aparece como retalhos de cores. Quadras alinhadas ao ensaio, de tamanhos
+// variados, puladas onde passam vias, prédios, mata ou o próprio ensaio.
+// Cores puxadas para um verde-acinzentado e linhas de plantio quase sem
+// contraste: de longe, nenhuma quadra pode parecer mais "ensaio" que o ensaio.
 const CULTURAS = [
-  { nome: "soja", base: "#6f9a4b", linha: "#5a8240" },
-  { nome: "milho", base: "#557f3d", linha: "#466b31" },
-  { nome: "trigo", base: "#a9ab5c", linha: "#93954c" },
-  { nome: "palhada", base: "#b9a37a", linha: "#a38f68" },
-  { nome: "solo", base: "#8e7056", linha: "#7c6149" },
+  { nome: "soja", base: "#7a9662", linha: "#738d5c" },
+  { nome: "milho", base: "#6c885c", linha: "#668056" },
+  { nome: "trigo", base: "#969e6b", linha: "#8d9565" },
+  { nome: "palhada", base: "#9e9a7a", linha: "#959173" },
+  { nome: "solo", base: "#898168", linha: "#817962" },
 ];
 
 function texturaLinhas(base: string, linha: string): CanvasTexture {
@@ -129,7 +131,7 @@ function texturaLinhas(base: string, linha: string): CanvasTexture {
   g.fillStyle = base;
   g.fillRect(0, 0, 32, 32);
   g.fillStyle = linha;
-  for (let y = 0; y < 32; y += 8) g.fillRect(0, y, 32, 3); // linhas de plantio
+  for (let y = 0; y < 32; y += 8) g.fillRect(0, y, 32, 3); // linhas de plantio (sutis)
   const t = new CanvasTexture(c);
   t.wrapS = t.wrapT = RepeatWrapping;
   return t;
@@ -142,15 +144,19 @@ function lavouras(
   sorte: () => number,
 ): BufferGeometry[][] {
   const porCultura: BufferGeometry[][] = CULTURAS.map(() => []);
-  const [LX, LZ, VAO] = [110, 72, 7]; // quadra (m) e carreador entre quadras
+  const LXS = [80, 120, 165]; // lados possíveis da quadra (m)
+  const LZS = [50, 75, 100];
+  const VAO = 7; // carreador entre quadras
   const pontosVia: XZ[] = [];
   for (const v of vias)
     for (let i = 1; i < v.length; i++) {
       const L = Math.hypot(v[i][0] - v[i - 1][0], v[i][1] - v[i - 1][1]);
       for (let s = 0; s <= L; s += 6) pontosVia.push([v[i - 1][0] + ((v[i][0] - v[i - 1][0]) * s) / L, v[i - 1][1] + ((v[i][1] - v[i - 1][1]) * s) / L]);
     }
-  for (let x0 = -660; x0 < campo.comprimento_m + 660; x0 += LX + VAO) {
-    for (let z0 = -660; z0 < campo.largura_m + 660; z0 += LZ + VAO) {
+  const lado = (opcoes: number[]) => opcoes[Math.floor(sorte() * opcoes.length)];
+  for (let x0 = -660, LX = lado(LXS); x0 < campo.comprimento_m + 660; x0 += LX + VAO, LX = lado(LXS)) {
+    // cada faixa de quadras tem sua própria divisão: os carreadores não se alinham
+    for (let z0 = -660 - sorte() * 60, LZ = lado(LZS); z0 < campo.largura_m + 660; z0 += LZ + VAO, LZ = lado(LZS)) {
       const [x1, z1] = [x0 + LX, z0 + LZ];
       const toca = (x: number, z: number, folga: number) => x > x0 - folga && x < x1 + folga && z > z0 - folga && z < z1 + folga;
       if (toca(campo.comprimento_m / 2, campo.largura_m / 2, campo.comprimento_m / 2 + 20)) continue; // ensaio
@@ -179,7 +185,7 @@ function geometriaArvore(): BufferGeometry {
     return g;
   };
   const tronco = pintar(new CylinderGeometry(0.14, 0.2, 1.8, 5).translate(0, 0.9, 0).toNonIndexed(), COR.tronco);
-  const copa = pintar(new IcosahedronGeometry(1.5, 0).scale(1, 1.15, 1).translate(0, 2.9, 0).toNonIndexed(), COR.copa);
+  const copa = pintar(new IcosahedronGeometry(1.5, 0).scale(1, 1.15, 1).translate(0, 2.9, 0), COR.copa);
   tronco.deleteAttribute("uv");
   copa.deleteAttribute("uv");
   return mergeGeometries([tronco, copa])!;
@@ -234,8 +240,7 @@ function Arvores({ posicoes }: { posicoes: [number, number, number][] }) {
   return <instancedMesh key={posicoes.length} ref={ref} args={[geometria, material, posicoes.length]} raycast={() => null} />;
 }
 
-function Janelas({ geos }: { geos: ExtrudeGeometry[] }) {
-  const geo = useMemo(() => (geos.length ? mergeGeometries(geos.map((g) => g.toNonIndexed())) : null), [geos]);
+function Janelas({ geo }: { geo: BufferGeometry | null }) {
   const material = useRef<MeshBasicMaterial>(null);
   useFrame(() => {
     if (material.current) material.current.opacity = 0.85 * ambiente.noite;
@@ -313,33 +318,38 @@ export default function Entorno({ campo }: { campo: Campo }) {
     const culturas = lavouras(campo, bloqueios, vias.map((v) => v.xz), sorte).map((gs, i) =>
       gs.length ? { geo: mergeGeometries(gs)!, textura: texturaLinhas(CULTURAS[i].base, CULTURAS[i].linha) } : null,
     );
+    const solidos = predios.map((b) => {
+      const volume = new ExtrudeGeometry(forma(b.xz), { depth: b.altura_m, bevelEnabled: false });
+      volume.rotateX(-Math.PI / 2);
+      volume.translate(0, Y.chao, 0);
+      const cx = b.xz.reduce((s, q) => s + q[0], 0) / b.xz.length;
+      const cz = b.xz.reduce((s, q) => s + q[1], 0) / b.xz.length;
+      const galpao = b.tipo === "galpao";
+      const materiais = [
+        new MeshLambertMaterial({ color: galpao ? COR.galpaoTeto : COR.teto }),
+        new MeshLambertMaterial({ color: galpao ? COR.galpaoParede : COR.parede }),
+      ];
+      // faixa de janelas: o mesmo contorno, um pouco maior, baixo e no meio da parede
+      const janelas = b.tipo === "estufa" ? null : new ExtrudeGeometry(forma(b.xz), { depth: 0.7, bevelEnabled: false });
+      if (janelas) {
+        janelas.rotateX(-Math.PI / 2);
+        janelas.scale(1.004, 1, 1.004);
+        janelas.translate(cx * -0.004, Y.chao + b.altura_m * 0.45, cz * -0.004);
+      }
+      return { ...b, geo: volume, materiais, janelas, centro: [cx, cz] as XZ };
+    });
+    // janelas de todos os prédios numa malha só, montada uma vez com o resto do
+    // cenário (antes era refeita a cada snapshot, sem liberar a anterior)
+    const comJanelas = solidos.map((b) => b.janelas).filter((g): g is ExtrudeGeometry => g !== null);
     return {
+      janelas: comJanelas.length ? mergeGeometries(comJanelas) : null,
       culturas,
       asfalto: mesclar(asfalto),
       terra: mesclar(terra),
       faixas: mesclar(faixas),
       rios: mesclar(rios),
       areas: areas.map((a) => ({ tipo: a.tipo, geo: poligono(a.xz, Y.area) })),
-      predios: predios.map((b) => {
-        const volume = new ExtrudeGeometry(forma(b.xz), { depth: b.altura_m, bevelEnabled: false });
-        volume.rotateX(-Math.PI / 2);
-        volume.translate(0, Y.chao, 0);
-        const cx = b.xz.reduce((s, q) => s + q[0], 0) / b.xz.length;
-        const cz = b.xz.reduce((s, q) => s + q[1], 0) / b.xz.length;
-        const galpao = b.tipo === "galpao";
-        const materiais = [
-          new MeshLambertMaterial({ color: galpao ? COR.galpaoTeto : COR.teto }),
-          new MeshLambertMaterial({ color: galpao ? COR.galpaoParede : COR.parede }),
-        ];
-        // faixa de janelas: o mesmo contorno, um pouco maior, baixo e no meio da parede
-        const janelas = b.tipo === "estufa" ? null : new ExtrudeGeometry(forma(b.xz), { depth: 0.7, bevelEnabled: false });
-        if (janelas) {
-          janelas.rotateX(-Math.PI / 2);
-          janelas.scale(1.004, 1, 1.004);
-          janelas.translate(cx * -0.004, Y.chao + b.altura_m * 0.45, cz * -0.004);
-        }
-        return { ...b, geo: volume, materiais, janelas, centro: [cx, cz] as XZ };
-      }),
+      predios: solidos,
       rotulos: [
         ...dados.marcos.map((m) => ({ nome: m.nome, xz: proj(m.lat, m.lon), altura: 16 })),
         ...(pr540.length ? [{ nome: "PR-540", xz: pr540.sort((a, b) => b.xz.length - a.xz.length)[0].xz[1], altura: 3 }] : []),
@@ -399,7 +409,7 @@ export default function Entorno({ campo }: { campo: Campo }) {
               <mesh key={i} geometry={b.geo} raycast={semEvento} material={b.materiais} />
             ),
           )}
-          <Janelas geos={cena.predios.map((b) => b.janelas).filter((g): g is ExtrudeGeometry => g !== null)} />
+          <Janelas geo={cena.janelas} />
           <Arvores posicoes={cena.arvores} />
           {cena.rotulos.map((r) => (
             <Html key={r.nome} position={[r.xz[0], r.altura, r.xz[1]]} center className="rotulo-entorno" zIndexRange={[5, 0]}>
