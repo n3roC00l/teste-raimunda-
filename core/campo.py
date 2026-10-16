@@ -741,6 +741,12 @@ def montar_snapshot(experimento=None, fontes=None, agora=None, telemetria=None, 
     ultima_atividade = max(marcas) if marcas else None
 
     kpis = _kpis(plots, st, ultima_sync, ultima_atividade, agora)
+    # Demonstração: o "rover" é simulado e esta máquina não é o Pi. A
+    # telemetria dela (disco do /tmp, processos do painel parados) contradiria
+    # o rover sintético, então nem entra.
+    demo = os.path.exists(fontes.marcador_demo)
+    if demo:
+        telemetria = None
     largura = max((p["origem_m"][0] + par["largura_plot_m"] for p in plots), default=0.0)
     comprimento = max((p["origem_m"][1] + par["comprimento_plot_m"] for p in plots), default=0.0)
 
@@ -748,7 +754,7 @@ def montar_snapshot(experimento=None, fontes=None, agora=None, telemetria=None, 
         "schema": SCHEMA_VERSION,
         "gerado_em": _fmt(agora),
         "versao_software": config.VERSAO,
-        "demo": os.path.exists(fontes.marcador_demo),
+        "demo": demo,
         "experimento": escolhido,
         "experimentos": experimentos,
         "campanha_atual": campanha_atual,

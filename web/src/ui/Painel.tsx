@@ -26,7 +26,9 @@ function PilulaEstado({ estado }: { estado: string }) {
 
 function Foto({ nome, demo }: { nome: string; demo: boolean }) {
   const [falhou, setFalhou] = useState<string | null>(null);
-  if (demo || falhou === nome) return <div className="foto vazia">{demo ? "demonstração: sem fotos" : "foto indisponível"}</div>;
+  // na demo não há foto nenhuma: uma linha, não uma caixa vazia do tamanho da foto
+  if (demo) return <p className="discreto">Demonstração: as fotos não existem.</p>;
+  if (falhou === nome) return <div className="foto vazia">foto indisponível</div>;
   return <img className="foto" src={urlFoto(nome)} alt={`última foto analisada: ${nome}`} onError={() => setFalhou(nome)} />;
 }
 
@@ -90,7 +92,7 @@ function VistaRover({ snap, idx }: { snap: Snapshot; idx: Indice }) {
       )}
 
       <div className="bloco">
-        <h3>{snap.demo ? "Sistema (desta máquina, não do rover)" : "Sistema"}</h3>
+        <h3>Sistema</h3>
         <Linha rotulo="Fila de análise">{numero(r.fila_pendente)} fotos</Linha>
         {t ? (
           <>
@@ -101,7 +103,11 @@ function VistaRover({ snap, idx }: { snap: Snapshot; idx: Indice }) {
             </Linha>
           </>
         ) : (
-          <p className="discreto">Telemetria do Pi indisponível.</p>
+          <p className="discreto">
+            {snap.demo
+              ? "Demonstração: o rover é simulado, então não há temperatura, disco nem processos para mostrar."
+              : "Telemetria do Pi indisponível."}
+          </p>
         )}
         {alertas.map((a) => (
           <ItemAlerta key={a.codigo + a.motivo} alerta={a.alerta} motivo={a.motivo} />

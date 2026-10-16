@@ -5,6 +5,26 @@ versionamento: [SemVer](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### `feat/web-gemeo-painel`: log, painel e demo coerentes
+
+**Mudado**
+- Linha do tempo: "próxima carreira A → B" virou o resultado da carreira que
+  fechou ("A fechada: 68 plantas · 76%", com marca de alerta de forma
+  diferente para crítico); o código é clicável e leva a câmera até a carreira.
+- Painel na demo: uma linha "as fotos não existem" no lugar da caixa vazia do
+  tamanho de uma foto; a seção Sistema explica que não há telemetria.
+- `ferramentas/rodar_demo.sh`: pasta em `~/.cache/rover-demo` (o `/tmp` é
+  memória e some num reinício), `ROVER_DEMO_HOST=0.0.0.0` para abrir de outro
+  aparelho, servidor com `--sem-telemetria`.
+
+**Corrigido**
+- Snapshot com marcador `DEMO` saía com a telemetria da máquina da demo: o
+  painel dizia "analisador analisando" (rover simulado) e "analisador parado"
+  (esta máquina) ao mesmo tempo, e alertava "disco com 4 GB" (o `/tmp`).
+- `servidor_visao.py` imprimia o IP da rede mesmo atendendo só em 127.0.0.1;
+  agora diz "só nesta máquina" e só lista a rede com `--host 0.0.0.0`.
+- Favicon embutido no `index.html`: acabou o 404 de `/favicon.ico` no log.
+
 ### `feat/web-gemeo-lavoura`: o ensaio desenhado como lavoura
 
 **Adicionado**

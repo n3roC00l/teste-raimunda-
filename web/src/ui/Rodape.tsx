@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { COR, faixasEmergencia, RAMPA_LAVOURA } from "../cores";
-import { descreverEvento, ehErro, hora } from "../formato";
+import { descreverEvento, ehErro, hora, numero, pct } from "../formato";
+import { type Indice, useIndice } from "../indice";
 import { type ModoCor, useEstado } from "../store";
-import type { Snapshot } from "../tipos";
+import type { Alerta, Evento, Snapshot } from "../tipos";
 
 // Legenda (sempre presente), troca de modo de cor, câmera e os últimos
 // eventos. Alerta na legenda aparece como moldura: o mesmo sinal da cena.
@@ -59,17 +60,48 @@ function Legenda({ snap }: { snap: Snapshot }) {
   );
 }
 
+interface LinhaEvento {
+  carreira: string | null; // clicável: leva a câmera até ela
+  texto: string;
+  alerta: Alerta;
+  erro: boolean;
+}
+
+/** "Próxima carreira: A → B" diz pouco; o que importa é como A terminou. */
+function linhaDoEvento(ev: Evento, idx: Indice): LinhaEvento {
+  if (ev.evento === "parcela_avancada" && typeof ev.de === "string") {
+    const k = idx.carreiras.get(ev.de)?.carreira;
+    if (k?.estado === "analisada") {
+      const emergencia = k.emergencia === null ? "" : ` · ${pct(k.emergencia)}`;
+      return { carreira: k.id, texto: `fechada: ${numero(k.plantulas)} plantas${emergencia}`, alerta: k.alerta, erro: false };
+    }
+    if (k) return { carreira: k.id, texto: "fechada: analisando as fotos", alerta: null, erro: false };
+  }
+  return { carreira: null, texto: descreverEvento(ev), alerta: null, erro: ehErro(ev.evento) };
+}
+
 function LinhaDoTempo({ snap }: { snap: Snapshot }) {
+  const idx = useIndice(snap);
+  const selecionar = useEstado((e) => e.selecionar);
   const eventos = snap.eventos.slice(-6).reverse();
   if (eventos.length === 0) return null;
   return (
     <ol className="linha-tempo cartao" aria-label="Últimos eventos">
-      {eventos.map((ev, i) => (
-        <li key={`${ev.ts}-${i}`} className={ehErro(ev.evento) ? "erro" : ""}>
-          <span className="ev-hora">{hora(ev.ts)}</span>
-          {descreverEvento(ev)}
-        </li>
-      ))}
+      {eventos.map((ev, i) => {
+        const l = linhaDoEvento(ev, idx);
+        return (
+          <li key={`${ev.ts}-${i}`} className={l.erro ? "erro" : ""}>
+            <span className="ev-hora">{hora(ev.ts)}</span>
+            {l.alerta && <i className={`ev-marca ${l.alerta}`} aria-label={l.alerta === "critico" ? "crítico" : "atenção"} />}
+            {l.carreira && (
+              <button className="ev-carreira" onClick={() => selecionar({ tipo: "carreira", id: l.carreira! }, true)}>
+                {l.carreira}
+              </button>
+            )}
+            {l.carreira ? ` ${l.texto}` : l.texto}
+          </li>
+        );
+      })}
     </ol>
   );
 }

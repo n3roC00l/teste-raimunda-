@@ -365,6 +365,17 @@ def test_marcador_demo(fontes):
     assert _snap(fontes)["demo"] is True
 
 
+def test_demo_ignora_telemetria_desta_maquina(fontes):
+    # na demo o rover é sintético: disco e processos desta máquina não são dele
+    tele = {"cpu_temp_c": 50.0, "disco_livre_gb": 0.5,
+            "processos": {"painel": False, "analisador": False, "capturador": False}}
+    assert _snap(fontes, telemetria=tele)["saude"]["telemetria"] == tele
+    open(fontes.marcador_demo, "w").close()
+    s = _snap(fontes, telemetria=tele)
+    assert s["saude"]["telemetria"] is None
+    assert "disco" not in {a["codigo"] for a in s["saude"]["alertas"]}
+
+
 # --- cache incremental ------------------------------------------------------
 def test_cache_le_so_o_que_entrou_e_bate_com_leitura_completa(fontes):
     cache = campo.Cache()

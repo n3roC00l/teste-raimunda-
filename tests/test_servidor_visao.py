@@ -200,3 +200,17 @@ def test_servidor_nao_escreve_nada(servidor, tmp_path):
         _get(base + rota)
     _get(base + "/api/snapshot", metodo="POST")
     assert foto_do_disco() == antes
+
+
+@pytest.mark.parametrize("host", ["127.0.0.1", "localhost", "::1"])
+def test_enderecos_preso_na_maquina_nao_mostra_ip_da_rede(host):
+    assert servidor_visao._enderecos(host, 8765) == ["http://127.0.0.1:8765  (só nesta máquina)"]
+
+
+def test_enderecos_na_rede_mostra_mdns():
+    enderecos = servidor_visao._enderecos("0.0.0.0", 8080)
+    assert enderecos[0].endswith(".local:8080")
+
+
+def test_enderecos_num_ip_especifico():
+    assert servidor_visao._enderecos("192.168.4.1", 8080) == ["http://192.168.4.1:8080"]
